@@ -7,6 +7,8 @@ deploy:
   access_key_id: AKIAIS3WYKWWJEQJB3KA
   secret_access_key:
     secure: X6cdUSKvFe1yUXs/ucA9zeLG8xflRIJDOh6DuCZyBzD31nYZuQfhC0m0mdXQcLy5OLU+WgexM0oBr2vINIvBR4nJp81BRnC7EeMWu1RXrP+1FonnzQBlL2wYAy3Y1MzBvoc+QiX4cIKez0lwHgFqkTNhUlse8yxXNqPAVKrwewZabkSHVoLqaR+JrEsJHZu6+A9dqG7vnGk+v0TAmBcELoW5JinFfqbtmjDrp3jo86cELWSXZG7vmCBM6t+cNDaxBdcKfMQP7zgCQ6Fdf6MqB3+G/kwy3iR4F4t92xYKuzDr/5l1z11lpetYbuWDKEvmsyVlr8mhLHYRWo+7V2Df3CKVEUuc4afQtMjYaQykaFGXwEdVJ8S06agL5bzvZ87LK7kCKIHgwgNsxidBVdgGDcWsM7ZVyVWfiFT+UhUuGAM/qNsJiFm4MyiPl5DtiDTXXOBVZenovYiPO5JoA/A8Uu9nLNRi0u8yv4jvTRAWZsKzUgBeSF+IlWNCPJxamYBndl0FOOJ9emjamy57O6SF+nqDjsV2+uQynU6pnnJH2MUv9scEsg46s4FAQ8Dwraom/Mk2CT5cCWFAYyU5to7fHp1luVeJOiGMJjms34jfFXlvACFbujT6IcK2qUBJBmtrQhdKBGzYwDUC/kqPue9tTp3dl5NKHTJAlr1Eh5FlumM=
-  bucket: corneliu.forms.build
+  bucket: corneliu.travis.builds
+  upload-dir: forms
+  local_dir: target
   skip_cleanup: true
   acl: public_read

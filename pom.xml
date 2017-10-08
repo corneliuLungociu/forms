@@ -103,6 +103,7 @@
                         </goals>
                         <configuration>
                             <descriptor>bin32.xml</descriptor>
+                            <outputDirectory>${project.build.directory}/bin</outputDirectory>
                             <finalName>${project.artifactId}-${project.version}-32</finalName>
                         </configuration>
                     </execution>
@@ -115,6 +116,7 @@
                         </goals>
                         <configuration>
                             <descriptor>bin64.xml</descriptor>
+                            <outputDirectory>${project.build.directory}/bin</outputDirectory>
                             <finalName>${project.artifactId}-${project.version}-64</finalName>
                         </configuration>
                     </execution>
@@ -127,6 +129,7 @@
                         </goals>
                         <configuration>
                             <descriptor>bin.xml</descriptor>
+                            <outputDirectory>${project.build.directory}/bin</outputDirectory>
                             <finalName>${project.artifactId}-${project.version}</finalName>
                         </configuration>
                     </execution>
