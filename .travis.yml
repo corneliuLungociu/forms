@@ -3,12 +3,13 @@ jdk: oraclejdk8
 sudo: false
 script: mvn clean package
 deploy:
+  skip_cleanup: true
   provider: s3
   access_key_id: AKIAIS3WYKWWJEQJB3KA
   secret_access_key:
     secure: m2TbGfHO+EiCEseElS4rtOJ0f8JIbr/CblOZQ5dpPxBOcwabIObn0ZzxleY/8QLyUp/Ii7T2NMEJ5ZB4I9B46EHTPkG8rYxKPsGv1JrqT4ejobMObQD3Vt0Ohq34gfwqpn9/RhXJtR1nnVQrJ81GaZUxS6yxTDfto7JgibzilN3xjuBj0SFlR4HHSzOlU9jkZ8vjfcuafAy8UZrQdfJhrcYtkmZ8qRDwuYO7JVmIso1VEp/cXh2l00HGQAglDs92RiRVpV8eGEN26Yn+66p/6DpJeNW8D+sKco8Mo2pz2tsZv8uOY9vDrJHNXN+fGIcAhZg4VHV37XTTi8Doz29I7z53fZue8D5I+wB9LXzSb1iWE/fFvX5dXCKlQxzxzi7qHGjmMrUercPy+5z5F4OZxM0uWHAgU231CpnIMGP0lgMvZWrltUBhJJnh9DH+/3wzfHJ7V955hwk26V/nt3Yc/qhx64YlJ7MBZznhKtBA74pPsvGeGxNbwtzz37ltoUhFUFEb5KSmhZoXHGhDRh/5l3KqDWFEX/IiZPOM7QDoK9Im5qelOZXHNpAdgYPIfMMQwoP33iV5Ic0lq0uoXx8frgN6uPSR+eMOd4gDXWJ50w2dAy8RBACd6lL9UVwmloBmWOyZuhDqeC5dXiHIw+FtdqxVRRp7Ps/w4gb+J9tGjg8=
   bucket: corneliu.travis.builds
-  local-dir: target
+  local-dir: target/bin
   upload-dir: forms
   acl: public_read
   on:
