@@ -36,7 +36,11 @@
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="textPannel" alignment="0" min="-2" pref="860" max="-2" attributes="0"/>
-                  <Component id="processButton" alignment="0" min="-2" max="-2" attributes="0"/>
+                  <Group type="102" alignment="0" attributes="0">
+                      <Component id="processButton" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
+                  </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
@@ -63,6 +67,7 @@
                   <Component id="addEntryButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="saveDictionaryButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="reloadDictionaryButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
@@ -132,6 +137,17 @@
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="reloadDictionaryButtonActionPerformed"/>
       </Events>
+    </Component>
+    <Component class="javax.swing.JLabel" name="jLabel1">
+      <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/info3.png"/>
+        </Property>
+        <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;&#xa;Procesarea textului de mai jos se face in urmatorul fel:&#xa;&lt;ol&gt;&#xa;&lt;li&gt;&#xa;Toate cheile din text de forma &lt;b&gt;[CHEIE]&lt;/b&gt; vor fi inlocuite cu valoarea corespunzatoare din dictionar&#xa;&lt;br/&gt;&#xa;Cautarea cheii in dictionar este &quot;case insensitive&quot;&#xa;&lt;/li&gt;&#xa;&#xa;&lt;li&gt;&#xa;Toate tabelele care au&lt;b&gt; exact 4 coloane&lt;/b&gt;, vor fi procesate in felul urmator:&#xa;&lt;ul&gt;&#xa;&lt;li&gt;Primul rand este lasat neatins&lt;/li&gt;&#xa;&lt;li&gt;Pentru toate randurile urmatoare, valoarea coloanei 4 va fi calculata in felul urmator &quot;Col4 = Col3*Col2&quot;&lt;/li&gt;&#xa;&lt;li&gt;Pe ulrimul rand din tabel, in ultima coloana, se va calcula totalul de pe Coloana 4&lt;/li&gt;&#xa;&lt;/ul&gt;&#xa;&#xa;Exemplu:&#xa;&#xa;    &lt;table border=&quot;1&quot; cellspacing=&quot;2&quot; cellpadding=&quot;4&quot; width=&quot;100%&quot; valign=&quot;top&quot;&gt;&#xa;      &lt;tr&gt;&#xa;        &lt;td&gt;&#xa;          &lt;b&gt;Produs&#xa;&lt;/b&gt;        &lt;/td&gt;&#xa;        &lt;td&gt;&#xa;          &lt;b&gt;Cantitate&#xa;&lt;/b&gt;        &lt;/td&gt;&#xa;        &lt;td&gt;&#xa;          &lt;b&gt;Pret/unitate&#xa;&lt;/b&gt;        &lt;/td&gt;&#xa;        &lt;td&gt;&#xa;          &lt;b&gt;Total&lt;/b&gt;&#xa;        &lt;/td&gt;&#xa;      &lt;/tr&gt;&#xa;      &lt;tr&gt;&#xa;        &lt;td&gt;&#xa;          Masa&#xa;        &lt;/td&gt;&#xa;        &lt;td&gt;&#xa;          2&#xa;        &lt;/td&gt;&#xa;        &lt;td&gt;&#xa;          2.15&lt;b&gt;&lt;font color=&quot;#ff0000&quot;&gt;&#xa;&lt;/font&gt;&lt;/b&gt;        &lt;/td&gt;&#xa;        &lt;td&gt;&#xa;          &lt;b&gt;&lt;font color=&quot;#ff0000&quot;&gt;4.30&lt;/font&gt;&lt;/b&gt;&#xa;        &lt;/td&gt;&#xa;      &lt;/tr&gt;&#xa;      &lt;tr&gt;&#xa;        &lt;td&gt;&#xa;          Scaun&#xa;        &lt;/td&gt;&#xa;        &lt;td&gt;&#xa;          5.21&#xa;        &lt;/td&gt;&#xa;        &lt;td&gt;&#xa;          2.12&lt;b&gt;&#xa;&lt;/b&gt;        &lt;/td&gt;&#xa;        &lt;td&gt;&#xa;          &lt;b&gt;&lt;font color=&quot;#ff0000&quot;&gt;11.05&lt;/font&gt;&lt;/b&gt;&lt;font color=&quot;#ff0000&quot;&gt;&#xa;&lt;/font&gt;        &lt;/td&gt;&#xa;      &lt;/tr&gt;&#xa;      &lt;tr&gt;&#xa;        &lt;td&gt;&#xa;          &lt;font color=&quot;#ff0000&quot;&gt;&#xa;&lt;/font&gt;        &lt;/td&gt;&#xa;        &lt;td&gt;&#xa;          &lt;font color=&quot;#ff0000&quot;&gt;&#xa;&lt;/font&gt;        &lt;/td&gt;&#xa;        &lt;td&gt;&#xa;          &lt;b&gt;&lt;font color=&quot;#ff0000&quot;&gt;&#xa;&lt;/font&gt;&lt;/b&gt;        &lt;/td&gt;&#xa;        &lt;td&gt;&#xa;          &lt;b&gt;&lt;font color=&quot;#ff0000&quot;&gt;15.35&lt;/font&gt;&lt;/b&gt;&#xa;        &lt;/td&gt;&#xa;      &lt;/tr&gt;&#xa;    &lt;/table&gt;&#xa;&#xa;&lt;/li&gt;&#xa;&lt;/ol&gt;&#xa;&lt;/html&gt;"/>
+        <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
+          <Color id="Hand Cursor"/>
+        </Property>
+      </Properties>
     </Component>
   </SubComponents>
 </Form>

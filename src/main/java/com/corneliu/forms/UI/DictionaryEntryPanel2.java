@@ -7,9 +7,9 @@ package com.corneliu.forms.UI;
 
 import javax.swing.JTextField;
 
-public class DictionaryEntryPannel2 extends javax.swing.JPanel {
+public class DictionaryEntryPanel2 extends javax.swing.JPanel {
 
-    public DictionaryEntryPannel2(String key, String value) {
+    public DictionaryEntryPanel2(String key, String value) {
         initComponents();
         keyText.setText(key);
         valueText.setText(value);

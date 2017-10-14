@@ -23,6 +23,9 @@ public class MainFrame2 extends javax.swing.JFrame {
         textProcessor = new TextProcessorImpl();
         initComponents();
 
+        ToolTipManager.sharedInstance().setInitialDelay(500);
+        ToolTipManager.sharedInstance().setLightWeightPopupEnabled(true);
+        ToolTipManager.sharedInstance().setDismissDelay(30000);
         initEditor1();
 //        initEditor2();
 
@@ -41,15 +44,16 @@ public class MainFrame2 extends javax.swing.JFrame {
 //    }
 
     private void initEditor1() {
-        editor1 = new EkitCore(false, null, null, null, null, null, true, false, true, true, "en", "US", false, true, false, true, "FN|CT|CP|PS|PX|UN|RE|*|BL|IT|UD|SK|SU|SB|UL|OL|AL|AC|AR|AJ|SP|UC|UM|LK|TI|TE|CE|RI|CI|RD|CD|SR|FO", true, true);
+        editor1 = new EkitCore(false, null, null, null, null, null, true, false, true, true, "en", "US", false, true, false, true,
+                "PR|FN|CT|CP|PS|PX|UN|RE|*|BL|IT|UD|SK|SU|SB|UL|OL|AL|AC|AR|AJ|SP|UC|UM|LK|TI|TE|CE|RI|CI|RD|CD|SR|FO", true, true);
         editor1.setPreferredSize(new Dimension(800, 600));
         editor1.setSize(new Dimension(800, 600));
 
         JMenuBar menuBar = editor1.getMenuBar();
-        menuBar.remove(0);  // remove file menu
-        menuBar.remove(8);  // remuve help menu
-        menuBar.remove(8);  // remove debug menu
-        menuBar.remove(1);  // remove view menu
+        menuBar.remove(10);  // remove debug menu
+        menuBar.remove(9);  // remove help menu
+        menuBar.remove(2);  // remove view menu
+//        menuBar.remove(0);  // remove file menu
         this.setJMenuBar(menuBar);
 
         editor1.getToolBarMain(true).setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -74,7 +78,7 @@ public class MainFrame2 extends javax.swing.JFrame {
     }//GEN-LAST:event_processButtonActionPerformed
 
     private void addEntryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addEntryButtonActionPerformed
-        DictionaryEntryPannel2 panel = new DictionaryEntryPannel2("", "");
+        DictionaryEntryPanel2 panel = new DictionaryEntryPanel2("", "");
         dictionaryPannel.add(panel);
         panel.getKeyText().grabFocus();
         this.pack();
@@ -109,8 +113,8 @@ public class MainFrame2 extends javax.swing.JFrame {
         Map<String, String> actualDictionary = new HashMap<>();
 
         for (Component component : dictionaryPannel.getComponents()) {
-            if (component instanceof DictionaryEntryPannel2) {
-                DictionaryEntryPannel2 dictionaryPannel = (DictionaryEntryPannel2) component;
+            if (component instanceof DictionaryEntryPanel2) {
+                DictionaryEntryPanel2 dictionaryPannel = (DictionaryEntryPanel2) component;
                 if (StringUtils.isEmpty(dictionaryPannel.getKeyText().getText())) {
                     continue;
                 }
@@ -122,7 +126,7 @@ public class MainFrame2 extends javax.swing.JFrame {
 
     private void clearDictionary() {
         for (Component component : dictionaryPannel.getComponents()) {
-            if (component instanceof DictionaryEntryPannel2) {
+            if (component instanceof DictionaryEntryPanel2) {
                 dictionaryPannel.remove(component);
             }
         }
@@ -130,7 +134,7 @@ public class MainFrame2 extends javax.swing.JFrame {
 
     private void loadDictionary() throws FileNotFoundException {
         for (Map.Entry<String, String> dictionaryEntry : textProcessor.getDictionary().entrySet()) {
-            DictionaryEntryPannel2 panel = new DictionaryEntryPannel2(dictionaryEntry.getKey(), dictionaryEntry.getValue());
+            DictionaryEntryPanel2 panel = new DictionaryEntryPanel2(dictionaryEntry.getKey(), dictionaryEntry.getValue());
             dictionaryPannel.add(panel);
         }
     }
@@ -145,6 +149,7 @@ public class MainFrame2 extends javax.swing.JFrame {
         addEntryButton = new javax.swing.JButton();
         saveDictionaryButton = new javax.swing.JButton();
         reloadDictionaryButton = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMaximumSize(new java.awt.Dimension(1024, 800));
@@ -185,6 +190,10 @@ public class MainFrame2 extends javax.swing.JFrame {
             }
         });
 
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/info3.png"))); // NOI18N
+        jLabel1.setToolTipText("<html>\nProcesarea textului de mai jos se face in urmatorul fel:\n<ol>\n<li>\nToate cheile din text de forma <b>[CHEIE]</b> vor fi inlocuite cu valoarea corespunzatoare din dictionar\n<br/>\nCautarea cheii in dictionar este \"case insensitive\"\n</li>\n\n<li>\nToate tabelele care au<b> exact 4 coloane</b>, vor fi procesate in felul urmator:\n<ul>\n<li>Primul rand este lasat neatins</li>\n<li>Pentru toate randurile urmatoare, valoarea coloanei 4 va fi calculata in felul urmator \"Col4 = Col3*Col2\"</li>\n<li>Pe ulrimul rand din tabel, in ultima coloana, se va calcula totalul de pe Coloana 4</li>\n</ul>\n\nExemplu:\n\n    <table border=\"1\" cellspacing=\"2\" cellpadding=\"4\" width=\"100%\" valign=\"top\">\n      <tr>\n        <td>\n          <b>Produs\n</b>        </td>\n        <td>\n          <b>Cantitate\n</b>        </td>\n        <td>\n          <b>Pret/unitate\n</b>        </td>\n        <td>\n          <b>Total</b>\n        </td>\n      </tr>\n      <tr>\n        <td>\n          Masa\n        </td>\n        <td>\n          2\n        </td>\n        <td>\n          2.15<b><font color=\"#ff0000\">\n</font></b>        </td>\n        <td>\n          <b><font color=\"#ff0000\">4.30</font></b>\n        </td>\n      </tr>\n      <tr>\n        <td>\n          Scaun\n        </td>\n        <td>\n          5.21\n        </td>\n        <td>\n          2.12<b>\n</b>        </td>\n        <td>\n          <b><font color=\"#ff0000\">11.05</font></b><font color=\"#ff0000\">\n</font>        </td>\n      </tr>\n      <tr>\n        <td>\n          <font color=\"#ff0000\">\n</font>        </td>\n        <td>\n          <font color=\"#ff0000\">\n</font>        </td>\n        <td>\n          <b><font color=\"#ff0000\">\n</font></b>        </td>\n        <td>\n          <b><font color=\"#ff0000\">15.35</font></b>\n        </td>\n      </tr>\n    </table>\n\n</li>\n</ol>\n</html>");
+        jLabel1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -193,7 +202,10 @@ public class MainFrame2 extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(textPannel, javax.swing.GroupLayout.PREFERRED_SIZE, 860, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(processButton))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(processButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel1)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
@@ -214,7 +226,8 @@ public class MainFrame2 extends javax.swing.JFrame {
                     .addComponent(processButton)
                     .addComponent(addEntryButton)
                     .addComponent(saveDictionaryButton)
-                    .addComponent(reloadDictionaryButton))
+                    .addComponent(reloadDictionaryButton)
+                    .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(textPannel, javax.swing.GroupLayout.DEFAULT_SIZE, 757, Short.MAX_VALUE)
@@ -229,6 +242,7 @@ public class MainFrame2 extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addEntryButton;
     private javax.swing.JPanel dictionaryPannel;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JButton processButton;
     private javax.swing.JButton reloadDictionaryButton;
     private javax.swing.JButton saveDictionaryButton;

@@ -6,6 +6,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -23,10 +27,46 @@ public class TextProcessorImpl implements TextProcessor {
     @Override
     public String process(String rawText, Map<String, String> actualDictionary) {
         StrSubstitutor subst = new StrSubstitutor(new CaseInsensitiveStrLookup<>(actualDictionary), "[", "]", '!');
-        return subst.replace(rawText);
+
+        Document document = Jsoup.parse(rawText);
+        document.body().getElementsByTag("table").forEach(this::processTable);
+
+        return subst.replace(document.html());
 
     }
-    
+
+    private void processTable(Element table) {
+        // only process tables with 4 columns
+        if (table.select("td").size() % 4 != 0) {
+            return;
+        }
+
+        float grandTotal = 0;
+        Elements rows = table.select("tr");
+        for (Element row : rows) {
+            grandTotal += processRow(row);
+        }
+
+        rows.last().select("td").last().text(String.format("%.2f", grandTotal) + "");
+    }
+
+    private float processRow(Element row) {
+        Elements columns = row.select("td");
+        String quantity = columns.get(1).text();
+        String pricePerUnit = columns.get(2).text();
+
+        try {
+            float quantityNum = Float.parseFloat(quantity);
+            float pricePerUnitNum = Float.parseFloat(pricePerUnit);
+            float rowTotal = quantityNum * pricePerUnitNum;
+            columns.get(3).text(String.format("%.2f", rowTotal));
+
+            return rowTotal;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     @Override
     public Map<String, String> getDictionary() throws FileNotFoundException {
         Type type = new TypeToken<Map<String, String>>(){}.getType();
