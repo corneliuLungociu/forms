@@ -28,7 +28,7 @@
             <directory>target</directory>
             <outputDirectory>.</outputDirectory>
             <includes>
-                <include>forms-1.0-64.exe</include>
+                <include>forms-1.1-64.exe</include>
             </includes>
         </fileSet>
     </fileSets>
