@@ -1,0 +1,8 @@
+DONE - validate tables (ignore tables with text on col2 si 3)
+DONE - verifica skip empy lines on total
+
+DONE remove <colgroup> si <col> tags
+DONE remove <o> si <o:p> tags
+
+DONE - formule tabel cu 4 col
+- formule tabel cu 5 col
