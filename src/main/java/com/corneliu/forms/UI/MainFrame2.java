@@ -6,13 +6,7 @@ import com.hexidec.ekit.EkitCore;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
-import javax.swing.text.Element;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
@@ -22,6 +16,7 @@ public class MainFrame2 extends javax.swing.JFrame {
 
     private TextProcessor textProcessor;
     private EkitCore editor1;
+    private JScrollPane dictionaryScrollPane;
 //    private HTMLEditorPane editor2;
 
 
@@ -156,6 +151,9 @@ public class MainFrame2 extends javax.swing.JFrame {
         saveDictionaryButton = new javax.swing.JButton();
         reloadDictionaryButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
+
+        dictionaryScrollPane = new JScrollPane(dictionaryPannel);
+        dictionaryScrollPane.setPreferredSize(new Dimension(700, 800));
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMaximumSize(new java.awt.Dimension(1024, 800));
@@ -445,7 +443,7 @@ public class MainFrame2 extends javax.swing.JFrame {
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addComponent(reloadDictionaryButton)
                                                 .addGap(0, 0, Short.MAX_VALUE))
-                                        .addComponent(dictionaryPannel, javax.swing.GroupLayout.DEFAULT_SIZE, 587, Short.MAX_VALUE))
+                                        .addComponent(dictionaryScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 587, Short.MAX_VALUE))
                                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -461,7 +459,7 @@ public class MainFrame2 extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addComponent(textPannel, javax.swing.GroupLayout.DEFAULT_SIZE, 757, Short.MAX_VALUE)
-                                        .addComponent(dictionaryPannel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                        .addComponent(dictionaryScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                                 .addContainerGap())
         );
 

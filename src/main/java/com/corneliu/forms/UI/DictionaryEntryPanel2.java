@@ -37,7 +37,7 @@ public class DictionaryEntryPanel2 extends javax.swing.JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addComponent(keyText, javax.swing.GroupLayout.PREFERRED_SIZE, 188, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(valueText, javax.swing.GroupLayout.DEFAULT_SIZE, 427, Short.MAX_VALUE))
+                .addComponent(valueText, javax.swing.GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

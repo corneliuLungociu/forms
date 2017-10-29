@@ -38,11 +38,12 @@ public class TextProcessorImpl implements TextProcessor {
         rawText = cleanMarkup(rawText);
 
         StrSubstitutor dictionarySubst = new StrSubstitutor(new CaseInsensitiveStrLookup<>(actualDictionary), "[", "]", '!');
+        rawText = dictionarySubst.replace(rawText);
 
         Document document = Jsoup.parse(rawText);
         document.body().getElementsByTag("table").forEach(this::processTable);
 
-        return dictionarySubst.replace(document.html());
+        return document.html();
     }
 
     @Override
@@ -82,7 +83,7 @@ public class TextProcessorImpl implements TextProcessor {
         }
     }
 
-    private void process4ColumnsTable(Element table) {
+    private void    process4ColumnsTable(Element table) {
 
         Map<Integer, Float> tableData = extractDataFrom4ColumnsTable(table);
         if (tableData == null) {
