@@ -6,17 +6,23 @@ import com.hexidec.ekit.EkitCore;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class MainFrame2 extends javax.swing.JFrame {
 
     private TextProcessor textProcessor;
     private EkitCore editor1;
     private JScrollPane dictionaryScrollPane;
+    private Map<String, String> currendDictionary;
 //    private HTMLEditorPane editor2;
 
 
@@ -30,7 +36,25 @@ public class MainFrame2 extends javax.swing.JFrame {
         initEditor1();
 //        initEditor2();
 
-        loadDictionary();
+        currendDictionary = textProcessor.getDictionary();
+        repaintDictionary(false, null);
+
+        jTextField1.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                repaintDictionary(sortAlpabetically.isSelected(), jTextField1.getText());
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                repaintDictionary(sortAlpabetically.isSelected(), jTextField1.getText());
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                repaintDictionary(sortAlpabetically.isSelected(), jTextField1.getText());
+            }
+        });
     }
 
 //    private void initEditor2() {
@@ -68,10 +92,28 @@ public class MainFrame2 extends javax.swing.JFrame {
         editor1.getTextPane().grabFocus();
     }
 
-    private void processButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_processButtonActionPerformed
-        Map<String, String> actualDictionary = computeActualDictionary();
+    public boolean updateDictionaryKey(String originalKey, String newKey, String newValue) {
+        if (currendDictionary.containsKey(newKey.toUpperCase())) {
+            JOptionPane.showMessageDialog(null, "Duplicate key");
+            return false;
+        } else {
+            currendDictionary.remove(originalKey);
+             if (StringUtils.isNotBlank(newKey)) {
+                 currendDictionary.put(newKey.toUpperCase(), newValue);
+             }
+        }
 
-        String processedText = textProcessor.process(editor1.getDocumentText(), actualDictionary);
+        return true;
+    }
+
+    public void updateDictionaryEntry(String key, String value) {
+        if (StringUtils.isNotBlank(key)) {
+            currendDictionary.put(key, value);
+        }
+    }
+
+    private void processButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_processButtonActionPerformed
+        String processedText = textProcessor.process(editor1.getDocumentText(), currendDictionary);
         editor1.setDocumentText(processedText);
 
 //        String processedText = textProcessor.process(editor.getText(), actualDictionary);
@@ -79,16 +121,15 @@ public class MainFrame2 extends javax.swing.JFrame {
     }//GEN-LAST:event_processButtonActionPerformed
 
     private void addEntryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addEntryButtonActionPerformed
-        DictionaryEntryPanel2 panel = new DictionaryEntryPanel2("", "");
+        DictionaryEntryPanel2 panel = new DictionaryEntryPanel2(this, "", "");
         dictionaryPannel.add(panel);
         panel.getKeyText().grabFocus();
         this.pack();
     }//GEN-LAST:event_addEntryButtonActionPerformed
 
     private void saveDictionaryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveDictionaryButtonActionPerformed
-        Map<String, String> actualDictionary = computeActualDictionary();
         try {
-            textProcessor.saveDictionary(actualDictionary);
+            textProcessor.saveDictionary(currendDictionary);
             reloadDictionary();
         } catch (IOException e) {
             JOptionPane.showConfirmDialog(this, "Nu a reusit salvarea dictionarului." + e.getMessage());
@@ -104,14 +145,13 @@ public class MainFrame2 extends javax.swing.JFrame {
     }//GEN-LAST:event_reloadDictionaryButtonActionPerformed
 
     private void reloadDictionary() throws FileNotFoundException {
-        clearDictionary();
-        loadDictionary();
-        this.pack();
-        this.repaint();
+        currendDictionary = textProcessor.getDictionary();
+        jTextField1.setText("");
+        repaintDictionary(sortAlpabetically.isSelected(), null);
     }
 
     private Map<String, String> computeActualDictionary() {
-        Map<String, String> actualDictionary = new HashMap<>();
+        Map<String, String> actualDictionary = new LinkedHashMap<>();
 
         for (Component component : dictionaryPannel.getComponents()) {
             if (component instanceof DictionaryEntryPanel2) {
@@ -133,11 +173,26 @@ public class MainFrame2 extends javax.swing.JFrame {
         }
     }
 
-    private void loadDictionary() throws FileNotFoundException {
-        for (Map.Entry<String, String> dictionaryEntry : textProcessor.getDictionary().entrySet()) {
-            DictionaryEntryPanel2 panel = new DictionaryEntryPanel2(dictionaryEntry.getKey(), dictionaryEntry.getValue());
-            dictionaryPannel.add(panel);
+    private void repaintDictionary(boolean sorted, String filterValue) {
+        boolean shouldFilter = StringUtils.isNotBlank(filterValue);
+        clearDictionary();
+
+        Map<String, String> dictionaryToPaint;
+        if (sorted) {
+            dictionaryToPaint = new TreeMap<>(currendDictionary);
+        } else {
+            dictionaryToPaint = currendDictionary;
         }
+
+        for (Map.Entry<String, String> dictionaryEntry : dictionaryToPaint.entrySet()) {
+            if (!shouldFilter || dictionaryEntry.getKey().contains(filterValue.toUpperCase())) {
+                DictionaryEntryPanel2 panel = new DictionaryEntryPanel2(this, dictionaryEntry.getKey(), dictionaryEntry.getValue());
+                dictionaryPannel.add(panel);
+            }
+        }
+
+        this.pack();
+        this.repaint();
     }
 
     @SuppressWarnings("unchecked")
@@ -151,6 +206,9 @@ public class MainFrame2 extends javax.swing.JFrame {
         saveDictionaryButton = new javax.swing.JButton();
         reloadDictionaryButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
+        jTextField1 = new javax.swing.JTextField();
+        jLabel2 = new javax.swing.JLabel();
+        sortAlpabetically = new javax.swing.JToggleButton();
 
         dictionaryScrollPane = new JScrollPane(dictionaryPannel);
         dictionaryScrollPane.setPreferredSize(new Dimension(700, 800));
@@ -195,285 +253,91 @@ public class MainFrame2 extends javax.swing.JFrame {
         });
 
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/info3.png"))); // NOI18N
-        jLabel1.setToolTipText("<html>\nProcesarea textului de mai jos se face in urmatorul fel:" +
-                "\n<ol>\n" +
-                    "<li>\nToate cheile din text de forma <b>[CHEIE]</b> vor fi inlocuite cu valoarea corespunzatoare din dictionar\n<br/>\nCautarea cheii in dictionar este \"case insensitive\"\n</li>\n\n" +
-                    "<li>\nToate tabelele care au<b> exact 4 coloane</b>, vor fi procesate in felul urmator:\n" +
-                        "<ul>\n" +
-                            "<li>Primul rand este lasat neatins</li>\n<li>Pentru toate randurile urmatoare, valoarea coloanei 4 va fi calculata in felul urmator \"Col4 = Col3*Col2\"</li>\n" +
-                            "<li>Pe ulrimul rand din tabel, in ultima coloana, se va calcula totalul de pe Coloana 4</li>\n" +
-//                        "</ul>\n\nExemplu:\n\n    <table border=\"1\" cellspacing=\"2\" cellpadding=\"4\" width=\"100%\" valign=\"top\">\n      <tr>\n        <td>\n          <b>Produs\n</b>        </td>\n        <td>\n          <b>Cantitate\n</b>        </td>\n        <td>\n          <b>Pret/unitate\n</b>        </td>\n        <td>\n          <b>Total</b>\n        </td>\n      </tr>\n      <tr>\n        <td>\n          Masa\n        </td>\n        <td>\n          2\n        </td>\n        <td>\n          2.15<b><font color=\"#ff0000\">\n</font></b>        </td>\n        <td>\n          <b><font color=\"#ff0000\">4.30</font></b>\n        </td>\n      </tr>\n      <tr>\n        <td>\n          Scaun\n        </td>\n        <td>\n          5.21\n        </td>\n        <td>\n          2.12<b>\n</b>        </td>\n        <td>\n          <b><font color=\"#ff0000\">11.05</font></b><font color=\"#ff0000\">\n</font>        </td>\n      </tr>\n      <tr>\n        <td>\n          <font color=\"#ff0000\">\n</font>        </td>\n        <td>\n          <font color=\"#ff0000\">\n</font>        </td>\n        <td>\n          <b><font color=\"#ff0000\">\n</font></b>        </td>\n        <td>\n          <b><font color=\"#ff0000\">15.35</font></b>\n        </td>\n      </tr>\n    </table>\n\n" +
-                        "</ul>\n\nExemplu:\n\n" +
-                            "    <table cellspacing=\"0\" border=\"0\">\n" +
-                            "      <tr>\n" +
-                            "        <td height=\"64\" align=\"justify\" valign=\"top\" bgcolor=\"#CCFFFF\" style=\"border-top-color: #3c3c3c; border-top-style: solid; border-top-width: 1px; border-bottom-color: #3c3c3c; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #3c3c3c; border-left-style: solid; border-left-width: 1px; border-right-color: #3c3c3c; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <b><font size=\"2\">Consumator </font></b>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" bgcolor=\"#CCFFFF\" style=\"border-top-color: #3c3c3c; border-top-style: solid; border-top-width: 1px; border-bottom-color: #3c3c3c; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #3c3c3c; border-left-style: solid; border-left-width: 1px; border-right-color: #3c3c3c; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <b><font size=\"2\">Buc</font></b>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" bgcolor=\"#CCFFFF\" style=\"border-top-color: #3c3c3c; border-top-style: solid; border-top-width: 1px; border-bottom-color: #3c3c3c; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #3c3c3c; border-left-style: solid; border-left-width: 1px; border-right-color: #3c3c3c; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <b><font size=\"2\">Curent mediu consumat(mA)</font></b>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" bgcolor=\"#CCFFFF\" style=\"border-top-color: #3c3c3c; border-top-style: solid; border-top-width: 1px; border-bottom-color: #3c3c3c; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #3c3c3c; border-left-style: solid; border-left-width: 1px; border-right-color: #3c3c3c; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <b><font size=\"2\">Total consum (mA)</font></b>\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">Centrala instalatiei 1e</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"1\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">1</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"50\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">50</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"50\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          50.00\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">Tastatura 1g</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"1\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">1</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"30\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">30</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"30\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          30.00\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">Detector geam spart</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"0\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">0</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"40\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">40</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"0\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          0.00\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">Detector miscare lc 100</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"0\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">0</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"10\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">10</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"0\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          0.00\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">Detector de soc</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"1\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">1</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"25\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">25</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"25\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          25.00\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">Sirena exterioar&#259;</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"1\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">1</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"10\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">10</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"10\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          10.00\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">Tastatura 2c</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"0\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">0</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"30\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">30</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"0\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          0.00\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">Detector miscare lc 104 pimw</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"1\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">1</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"30\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">30</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"30\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          30.00\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">Modul gprs</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"0\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">0</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"80\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">80</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"0\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          0.00\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\"><br>\n" +
-                            "          </font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\"><br>\n" +
-                            "          </font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\"><br>\n" +
-                            "          </font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\"><br>\n" +
-                            "          </font>\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td colspan=\"3\" height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">TOTAL consum(mA)</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"145\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font color=\"#ff0000\">145.00</font>\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td colspan=\"3\" height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">TOTAL consum pentru 23,1/2(Ah)</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"3407.5\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font color=\"#ff0000\">3407.50</font>\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">Sirena interioara</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"right\" valign=\"middle\" sdval=\"2\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          2\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"400\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">400</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"800\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          800.00\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td colspan=\"3\" height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">TOTAL consum pentru 30min. Alarm&#259; (Ah)</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"400\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font color=\"#ff0000\">400.00</font>\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td colspan=\"3\" height=\"23\" align=\"justify\" valign=\"top\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font size=\"2\">TOTAL consum(mAh, prentru 23,1/2h+30min. alarma)</font>\n" +
-                            "        </td>\n" +
-                            "        <td align=\"justify\" valign=\"top\" sdval=\"3.8075\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          <font color=\"#ff0000\">3.81</font>\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "      <tr>\n" +
-                            "        <td colspan=\"3\" height=\"23\" align=\"left\" valign=\"middle\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          TOTAL CONSUM Ah\n" +
-                            "        </td>\n" +
-                            "        <td align=\"right\" valign=\"middle\" bgcolor=\"#FF0000\" sdval=\"3.8075\" sdnum=\"1033;\" style=\"border-top-color: #000000; border-top-style: solid; border-top-width: 1px; border-bottom-color: #000000; border-bottom-style: solid; border-bottom-width: 1px; border-left-color: #000000; border-left-style: solid; border-left-width: 1px; border-right-color: #000000; border-right-style: solid; border-right-width: 1px\">\n" +
-                            "          3.81\n" +
-                            "        </td>\n" +
-                            "      </tr>\n" +
-                            "    </table>" +
-                    "</li>\n" +
-                "</ol>\n</html>");
+        jLabel1.setToolTipText("<html>\nProcesarea textului de mai jos se face in urmatorul fel:\n<ol>\n<li>\nToate cheile din text de forma <b>[CHEIE]</b> vor fi inlocuite cu valoarea corespunzatoare din dictionar\n<br/>\nCautarea cheii in dictionar este \"case insensitive\"\n</li>\n\n<li>\nToate tabelele care au<b> exact 4 coloane</b>, vor fi procesate in felul urmator:\n<ul>\n<li>Primul rand este lasat neatins</li>\n<li>Pentru toate randurile urmatoare, valoarea coloanei 4 va fi calculata in felul urmator \"Col4 = Col3*Col2\"</li>\n<li>Pe ulrimul rand din tabel, in ultima coloana, se va calcula totalul de pe Coloana 4</li>\n</ul>\n\nExemplu:\n\n    <table border=\"1\" cellspacing=\"2\" cellpadding=\"4\" width=\"100%\" valign=\"top\">\n      <tr>\n        <td>\n          <b>Produs\n</b>        </td>\n        <td>\n          <b>Cantitate\n</b>        </td>\n        <td>\n          <b>Pret/unitate\n</b>        </td>\n        <td>\n          <b>Total</b>\n        </td>\n      </tr>\n      <tr>\n        <td>\n          Masa\n        </td>\n        <td>\n          2\n        </td>\n        <td>\n          2.15<b><font color=\"#ff0000\">\n</font></b>        </td>\n        <td>\n          <b><font color=\"#ff0000\">4.30</font></b>\n        </td>\n      </tr>\n      <tr>\n        <td>\n          Scaun\n        </td>\n        <td>\n          5.21\n        </td>\n        <td>\n          2.12<b>\n</b>        </td>\n        <td>\n          <b><font color=\"#ff0000\">11.05</font></b><font color=\"#ff0000\">\n</font>        </td>\n      </tr>\n      <tr>\n        <td>\n          <font color=\"#ff0000\">\n</font>        </td>\n        <td>\n          <font color=\"#ff0000\">\n</font>        </td>\n        <td>\n          <b><font color=\"#ff0000\">\n</font></b>        </td>\n        <td>\n          <b><font color=\"#ff0000\">15.35</font></b>\n        </td>\n      </tr>\n    </table>\n\n</li>\n</ol>\n</html>");
         jLabel1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+
+        jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/find.png"))); // NOI18N
+
+        sortAlpabetically.setText("A-Z");
+        sortAlpabetically.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                sortAlpabeticallyActionPerformed(e);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(textPannel, javax.swing.GroupLayout.PREFERRED_SIZE, 860, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addComponent(processButton)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel1)))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addComponent(addEntryButton)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(saveDictionaryButton)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(reloadDictionaryButton)
-                                                .addGap(0, 0, Short.MAX_VALUE))
-                                        .addComponent(dictionaryScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 587, Short.MAX_VALUE))
-                                .addContainerGap())
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(textPannel, javax.swing.GroupLayout.PREFERRED_SIZE, 860, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(processButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel1)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(dictionaryScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(addEntryButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(saveDictionaryButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(reloadDictionaryButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(sortAlpabetically)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel2)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(processButton)
-                                        .addComponent(addEntryButton)
-                                        .addComponent(saveDictionaryButton)
-                                        .addComponent(reloadDictionaryButton)
-                                        .addComponent(jLabel1))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(textPannel, javax.swing.GroupLayout.DEFAULT_SIZE, 757, Short.MAX_VALUE)
-                                        .addComponent(dictionaryScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addContainerGap())
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel2)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(processButton)
+                        .addComponent(addEntryButton)
+                        .addComponent(saveDictionaryButton)
+                        .addComponent(reloadDictionaryButton)
+                        .addComponent(jLabel1)
+                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(sortAlpabetically)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(textPannel, javax.swing.GroupLayout.DEFAULT_SIZE, 773, Short.MAX_VALUE)
+                    .addComponent(dictionaryScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void sortAlpabeticallyActionPerformed(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_sortAlpabeticallyActionPerformed
+        if (evt.getStateChange() == ItemEvent.SELECTED) {
+            repaintDictionary(true, jTextField1.getText());
+        } else if (evt.getStateChange() == ItemEvent.DESELECTED) {
+            repaintDictionary(false, jTextField1.getText());
+        }
+    }//GEN-LAST:event_sortAlpabeticallyActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addEntryButton;
     private javax.swing.JPanel dictionaryPannel;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JTextField jTextField1;
     private javax.swing.JButton processButton;
     private javax.swing.JButton reloadDictionaryButton;
     private javax.swing.JButton saveDictionaryButton;
+    private javax.swing.JToggleButton sortAlpabetically;
     private javax.swing.JPanel textPannel;
     // End of variables declaration//GEN-END:variables
 
