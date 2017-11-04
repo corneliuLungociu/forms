@@ -1,13 +1,10 @@
 {
+  "PRENUME": "Corneliu",
   "TELEFON": "0751958115",
   "TEST23": "test value2",
   "NRTASTATURI": "1",
   "ADRESA": "Str. Brutarilor, Cluj",
   "NUME": "Lungociu",
   "NRDETECTORI": "1",
-  "NRCENTRALE": "1",
-  "1": "1",
-  "123": "asd",
-  "TEST123123": "",
-  "QWE": ""
+  "NRCENTRALE": "1"
 }

@@ -19,7 +19,6 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class TextProcessorImpl implements TextProcessor {
@@ -58,8 +57,8 @@ public class TextProcessorImpl implements TextProcessor {
 
     @Override
     public Map<String, String> getDictionary() throws FileNotFoundException {
-        Type type = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
-
+        Type type = new TypeToken<Map<String, String>>() {
+        }.getType();
         return jsonParser.fromJson(new FileReader(DICTIONARY_FILE), type);
     }
 
