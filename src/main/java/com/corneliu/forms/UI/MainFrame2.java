@@ -9,7 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class MainFrame2 extends javax.swing.JFrame {
@@ -111,7 +111,7 @@ public class MainFrame2 extends javax.swing.JFrame {
     }
 
     private Map<String, String> computeActualDictionary() {
-        Map<String, String> actualDictionary = new HashMap<>();
+        Map<String, String> actualDictionary = new LinkedHashMap<>();
 
         for (Component component : dictionaryPannel.getComponents()) {
             if (component instanceof DictionaryEntryPanel2) {
