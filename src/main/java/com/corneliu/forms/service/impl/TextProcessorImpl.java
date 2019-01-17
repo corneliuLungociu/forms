@@ -2,6 +2,7 @@ package com.corneliu.forms.service.impl;
 
 import com.corneliu.forms.config.CaseInsensitiveStrLookup;
 import com.corneliu.forms.service.TextProcessor;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -26,13 +27,13 @@ public class TextProcessorImpl implements TextProcessor {
 
     private static final Gson jsonParser = new GsonBuilder().setPrettyPrinting().create();
     private static final String DICTIONARY_FILE = "config/dictionary.json";
-    public static final int NUMBER_OF_FOOTER_ROWS_FOR_4_COL_TABLE = 6;
-    public static final int INVERSE_INDEX_TOTAL = 6;
-    private static final int INVERSE_INDEX_TOTAL_PER_DAY = 5;
-    public static final int INVERSE_INDEX_TOTAL_SIRENE = 4;
-    public static final int INVERSE_INDEX_TOTAL_SIRENE_HALF = 3;
-    private static final int INVERSE_INDEX_TOTAL_WITH_SIRENE_PER_DAY = 2;
-    private static final int INVERSE_INDEX_TOTAL_FINAL = 1;
+
+    private enum TableType {
+        CONSUM_ALARMA_STANDBY,
+        CONSUM_ALARMA_ACTIVAT,
+        CONSUM_VIDEO,
+        OTHER
+    }
 
     @Override
     public String process(String rawText, Map<String, String> actualDictionary) {
@@ -42,9 +43,63 @@ public class TextProcessorImpl implements TextProcessor {
         rawText = dictionarySubst.replace(rawText);
 
         Document document = Jsoup.parse(rawText);
-        document.body().getElementsByTag("table").forEach(this::processTable);
+        Elements tables = document.body().getElementsByTag("table");
 
-        return document.html();
+        double consumAlarmaStandby = 0;
+        double consumAlarmaActivat = 0;
+        for (Element table : tables) {
+            switch (getTableType(table)) {
+                case CONSUM_ALARMA_STANDBY: {
+                    Map<Integer, Float> sumPerRow = fillSumPerRow(table, 3);
+
+                    double total = sumPerRow.values().stream().mapToDouble(Double::valueOf).sum();
+
+                    Elements rows = table.select("tr");
+                    rows.get(rows.size() - 3).select("td").last().text(String.format("%.2f", total));
+                    rows.get(rows.size() - 2).select("td").last().text(String.format("%.2f", total * 1000 * 23.5));
+                    rows.get(rows.size() - 1).select("td").last().text(String.format("%.2f", total * 1000 * 23.5));
+                    consumAlarmaActivat = total * 1000 * 23.5;
+                    break;
+                }
+                case CONSUM_ALARMA_ACTIVAT: {
+                    Map<Integer, Float> sumPerRow = fillSumPerRow(table, 3);
+
+                    double total = sumPerRow.values().stream().mapToDouble(Double::valueOf).sum();
+
+                    Elements rows = table.select("tr");
+                    rows.get(rows.size() - 3).select("td").last().text(String.format("%.2f", total));
+                    rows.get(rows.size() - 2).select("td").last().text(String.format("%.2f", total * 1000 * 0.5));
+                    rows.get(rows.size() - 1).select("td").last().text(String.format("%.2f", total * 1000 * 0.5));
+                    consumAlarmaStandby = total * 1000 * 0.5;
+                    break;
+                }
+                case CONSUM_VIDEO: {
+                    Map<Integer, Float> sumPerRow = fillSumPerRow(table, 3);
+
+                    double total = sumPerRow.values().stream().mapToDouble(Double::valueOf).sum();
+
+                    Elements rows = table.select("tr");
+                    rows.get(rows.size() - 3).select("td").last().text(String.format("%.2f", total));
+                    rows.get(rows.size() - 2).select("td").last().text(String.format("%.2f", total));
+                    rows.get(rows.size() - 1).select("td").last().text(String.format("%.2f", total / 0.55 / 3));
+                    break;
+                }
+            }
+        }
+
+        String processedDocument = document.html();
+
+        dictionarySubst = new StrSubstitutor(
+                new CaseInsensitiveStrLookup<>(ImmutableMap
+                        .<String, String>builder()
+                        .put(TableType.CONSUM_ALARMA_STANDBY.name(), "")
+                        .put(TableType.CONSUM_ALARMA_ACTIVAT.name(), "")
+                        .put(TableType.CONSUM_VIDEO.name(), "")
+                        .put("CONSUM_ALARMA_TOTAL", String.valueOf((consumAlarmaActivat + consumAlarmaStandby) * 1.25))
+                        .build()),
+                "[", "]", '!');
+
+        return dictionarySubst.replace(processedDocument);
     }
 
     @Override
@@ -69,57 +124,30 @@ public class TextProcessorImpl implements TextProcessor {
         Files.write(Paths.get(DICTIONARY_FILE), dictionaryString.getBytes("UTF-8"));
     }
 
-    private void processTable(Element table) {
+    private Map<Integer, Float> fillSumPerRow(Element table, int footerSize) {
 
-        Elements rows = table.select("tr");
-        if (rows.isEmpty()) {
-            return;
-        }
-
-        int nrOfColumns = rows.get(0).select("td").size();
-        switch (nrOfColumns) {
-            case 4: process4ColumnsTable(table); break;
-            case 5: process5ColsTable(); break;
-            default:
-        }
-    }
-
-    private void    process4ColumnsTable(Element table) {
-
-        Map<Integer, Float> tableData = extractDataFrom4ColumnsTable(table);
+        Map<Integer, Float> tableData = extractDataFrom4ColumnsTable(table, footerSize);
         if (tableData == null) {
-            return;
-        }
-
-        Elements rows = table.select("tr");
-        float total = 0;
-        for (Map.Entry<Integer, Float> tableDataEntry : tableData.entrySet()) {
-            rows.get(tableDataEntry.getKey()).select("td").last().text(String.format("%.2f", tableDataEntry.getValue()));
-            total += tableDataEntry.getValue();
-        }
-
-        float totalSirene = tableData.get(rows.size() - INVERSE_INDEX_TOTAL_SIRENE);
-        float totalSireneHalf = totalSirene / 2;
-        total -= totalSirene;
-        float totalPerDay = total * 23.5f;
-        float totalFinal = (totalSireneHalf + totalPerDay) / 1000;
-
-        rows.get(rows.size() - INVERSE_INDEX_TOTAL).select("td").last().text(String.format("%.2f", total));
-        rows.get(rows.size() - INVERSE_INDEX_TOTAL_PER_DAY).select("td").last().text(String.format("%.2f", totalPerDay));
-        rows.get(rows.size() - INVERSE_INDEX_TOTAL_SIRENE_HALF).select("td").last().text(String.format("%.2f", totalSireneHalf));
-        rows.get(rows.size() - INVERSE_INDEX_TOTAL_WITH_SIRENE_PER_DAY).select("td").last().text(String.format("%.2f", totalFinal));
-        rows.get(rows.size() - INVERSE_INDEX_TOTAL_FINAL).select("td").last().text(String.format("%.2f", totalFinal));
-    }
-
-    private Map<Integer, Float> extractDataFrom4ColumnsTable(Element table) {
-        Map<Integer, Float> data = new HashMap<>();
-
-        Elements rows = table.select("tr");
-        if (rows.size() < 7) {
             return null;
         }
 
-        for (int i = 1; i < rows.size() - NUMBER_OF_FOOTER_ROWS_FOR_4_COL_TABLE; i++) {
+        Elements rows = table.select("tr");
+        for (Map.Entry<Integer, Float> tableDataEntry : tableData.entrySet()) {
+            rows.get(tableDataEntry.getKey()).select("td").last().text(String.format("%.2f", tableDataEntry.getValue()));
+        }
+
+        return tableData;
+    }
+
+    private Map<Integer, Float> extractDataFrom4ColumnsTable(Element table, int footerSize) {
+        Map<Integer, Float> data = new HashMap<>();
+
+        Elements rows = table.select("tr");
+        if (rows.size() < footerSize + 1) {
+            return null;
+        }
+
+        for (int i = 1; i < rows.size() - footerSize; i++) {
             Element row = rows.get(i);
             Elements columns = row.select("td");
             if (columns.size() != 4 ) {
@@ -141,24 +169,17 @@ public class TextProcessorImpl implements TextProcessor {
             }
         }
 
-        int rowNrForSirene = rows.size() - INVERSE_INDEX_TOTAL_SIRENE;
-        Element rowSirene = rows.get(rowNrForSirene);
-        Elements columns = rowSirene.select("td");
-        if (columns.size() != 4 ) {
-            return null;
-        }
-        try {
-            float col2 = Float.parseFloat(columns.get(1).text().trim());
-            float col3 = Float.parseFloat(columns.get(2).text().trim());
-            data.put(rowNrForSirene, col2 * col3);
-        } catch (NumberFormatException e) {
-            return null;
-        }
-
         return data;
     }
 
-    private void process5ColsTable() {
+    private TableType getTableType(Element table) {
+        String text = table.select("tr").first().select("td").first().text();
+        for (TableType tableType : TableType.values()) {
+            if (text.contains("[" + tableType + "]")) {
+                return tableType;
+            }
+        }
 
+        return TableType.OTHER;
     }
 }

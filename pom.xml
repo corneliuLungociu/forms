@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.corneliu</groupId>
     <artifactId>forms</artifactId>
-    <version>1.5</version>
+    <version>1.6</version>
     <properties>
         <spring.version>4.3.7.RELEASE</spring.version>
     </properties>
@@ -29,6 +29,12 @@
             <groupId>hexidec.com</groupId>
             <artifactId>ekit</artifactId>
             <version>1.7b</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>21.0</version>
         </dependency>
 
 
