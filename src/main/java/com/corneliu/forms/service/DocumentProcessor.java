@@ -4,9 +4,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 
-public interface TextProcessor {
+public interface DocumentProcessor {
 
-    String process(String rawText, Map<String, String> actualDictionary);
+    String process(String rawText, Map<String, String> actualDictionary, DocumentType documentType);
 
     String cleanMarkup(String rawText);
 

@@ -1,11 +1,8 @@
 package com.corneliu.forms.service.impl;
 
 import com.corneliu.forms.config.CaseInsensitiveStrLookup;
-import com.corneliu.forms.service.TextProcessor;
+import com.corneliu.forms.service.TablesProcessor;
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.jsoup.Jsoup;
@@ -13,20 +10,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class TextProcessorImpl implements TextProcessor {
-
-    private static final Gson jsonParser = new GsonBuilder().setPrettyPrinting().create();
-    private static final String DICTIONARY_FILE = "config/dictionary.json";
+public class SecuritateTablesProcessor implements TablesProcessor {
 
     private enum TableType {
         CONSUM_ALARMA_STANDBY,
@@ -36,15 +23,13 @@ public class TextProcessorImpl implements TextProcessor {
     }
 
     @Override
-    public String process(String rawText, Map<String, String> actualDictionary) {
-        rawText = cleanMarkup(rawText);
-
-        StrSubstitutor dictionarySubst = new StrSubstitutor(new CaseInsensitiveStrLookup<>(actualDictionary), "[", "]", '!');
-        rawText = dictionarySubst.replace(rawText);
-
+    public String process(String rawText) {
         Document document = Jsoup.parse(rawText);
         Elements tables = document.body().getElementsByTag("table");
+        return processDocumentSecuritate(document, tables);
+    }
 
+    private String processDocumentSecuritate(Document document, Elements tables) {
         double consumAlarmaStandby = 0;
         double consumAlarmaActivat = 0;
         for (Element table : tables) {
@@ -56,9 +41,9 @@ public class TextProcessorImpl implements TextProcessor {
 
                     Elements rows = table.select("tr");
                     rows.get(rows.size() - 3).select("td").last().text(String.format("%.2f", total));
-                    rows.get(rows.size() - 2).select("td").last().text(String.format("%.2f", total * 1000 * 23.5));
-                    rows.get(rows.size() - 1).select("td").last().text(String.format("%.2f", total * 1000 * 23.5));
-                    consumAlarmaActivat = total * 1000 * 23.5;
+                    rows.get(rows.size() - 2).select("td").last().text(String.format("%.2f", total * 23.5 / 1000));
+                    rows.get(rows.size() - 1).select("td").last().text(String.format("%.2f", total * 23.5 / 1000));
+                    consumAlarmaActivat = total * 23.5 / 1000;
                     break;
                 }
                 case CONSUM_ALARMA_ACTIVAT: {
@@ -68,9 +53,9 @@ public class TextProcessorImpl implements TextProcessor {
 
                     Elements rows = table.select("tr");
                     rows.get(rows.size() - 3).select("td").last().text(String.format("%.2f", total));
-                    rows.get(rows.size() - 2).select("td").last().text(String.format("%.2f", total * 1000 * 0.5));
-                    rows.get(rows.size() - 1).select("td").last().text(String.format("%.2f", total * 1000 * 0.5));
-                    consumAlarmaStandby = total * 1000 * 0.5;
+                    rows.get(rows.size() - 2).select("td").last().text(String.format("%.2f", total * 0.5 / 1000));
+                    rows.get(rows.size() - 1).select("td").last().text(String.format("%.2f", total * 0.5 / 1000));
+                    consumAlarmaStandby = total * 0.5 / 1000;
                     break;
                 }
                 case CONSUM_VIDEO: {
@@ -89,7 +74,7 @@ public class TextProcessorImpl implements TextProcessor {
 
         String processedDocument = document.html();
 
-        dictionarySubst = new StrSubstitutor(
+        StrSubstitutor dictionarySubst = new StrSubstitutor(
                 new CaseInsensitiveStrLookup<>(ImmutableMap
                         .<String, String>builder()
                         .put(TableType.CONSUM_ALARMA_STANDBY.name(), "")
@@ -100,28 +85,6 @@ public class TextProcessorImpl implements TextProcessor {
                 "[", "]", '!');
 
         return dictionarySubst.replace(processedDocument);
-    }
-
-    @Override
-    public String cleanMarkup(String rawText) {
-        return rawText.replaceAll("(?si)<colgroup.*?</colgroup>", "")
-                .replaceAll("(?si)<col.*?</col>", "")
-                .replaceAll("(?si)<col.*?>", "")
-                .replaceAll("(?si)<o.*?</o>", "")
-                .replaceAll("(?si)<o:p.*?</o:p>", "");
-    }
-
-    @Override
-    public Map<String, String> getDictionary() throws FileNotFoundException {
-        Type type = new TypeToken<LinkedHashMap<String, String>>() {
-        }.getType();
-        return jsonParser.fromJson(new FileReader(DICTIONARY_FILE), type);
-    }
-
-    @Override
-    public void saveDictionary(Map<String, String> actualDictionary) throws IOException {
-        String dictionaryString = jsonParser.toJson(actualDictionary);
-        Files.write(Paths.get(DICTIONARY_FILE), dictionaryString.getBytes("UTF-8"));
     }
 
     private Map<Integer, Float> fillSumPerRow(Element table, int footerSize) {
@@ -161,8 +124,8 @@ public class TextProcessorImpl implements TextProcessor {
                     continue;
                 }
 
-                float col2 = Float.parseFloat(col2Text);
-                float col3 = Float.parseFloat(col3Text);
+                float col2 = textToNumber(col2Text);
+                float col3 = textToNumber(col3Text);
                 data.put(i, col2 * col3);
             } catch (NumberFormatException e) {
                 return null;
@@ -182,4 +145,9 @@ public class TextProcessorImpl implements TextProcessor {
 
         return TableType.OTHER;
     }
+
+    private float textToNumber(String col1Text) {
+        return Float.parseFloat(col1Text.replace(",", "."));
+    }
+
 }

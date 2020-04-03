@@ -1,7 +1,8 @@
 package com.corneliu.forms.UI;
 
-import com.corneliu.forms.service.TextProcessor;
-import com.corneliu.forms.service.impl.TextProcessorImpl;
+import com.corneliu.forms.service.DocumentType;
+import com.corneliu.forms.service.DocumentProcessor;
+import com.corneliu.forms.service.impl.DocumentProcessorImpl;
 import com.hexidec.ekit.EkitCore;
 import org.apache.commons.lang3.StringUtils;
 
@@ -14,14 +15,14 @@ import java.util.Map;
 
 public class MainFrame2 extends javax.swing.JFrame {
 
-    private TextProcessor textProcessor;
+    private DocumentProcessor textProcessor;
     private EkitCore editor1;
     private JScrollPane dictionaryScrollPane;
 //    private HTMLEditorPane editor2;
 
 
     public MainFrame2() throws FileNotFoundException {
-        textProcessor = new TextProcessorImpl();
+        textProcessor = new DocumentProcessorImpl();
         initComponents();
 
         ToolTipManager.sharedInstance().setInitialDelay(500);
@@ -68,15 +69,21 @@ public class MainFrame2 extends javax.swing.JFrame {
         editor1.getTextPane().grabFocus();
     }
 
-    private void processButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_processButtonActionPerformed
+    private void processSecuritateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_processSecuritateButtonActionPerformed
         Map<String, String> actualDictionary = computeActualDictionary();
 
-        String processedText = textProcessor.process(editor1.getDocumentText(), actualDictionary);
+        String processedText = textProcessor.process(editor1.getDocumentText(), actualDictionary, DocumentType.SECURITATE);
         editor1.setDocumentText(processedText);
 
-//        String processedText = textProcessor.process(editor.getText(), actualDictionary);
-//        editor.setText(processedText);
-    }//GEN-LAST:event_processButtonActionPerformed
+    }//GEN-LAST:event_processSecuritateButtonActionPerformed
+
+    private void processIncendiuButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_processIncendiuButtonActionPerformed
+        Map<String, String> actualDictionary = computeActualDictionary();
+
+        String processedText = textProcessor.process(editor1.getDocumentText(), actualDictionary, DocumentType.INCENDIU);
+        editor1.setDocumentText(processedText);
+
+    }//GEN-LAST:event_processIncendiuButtonActionPerformed
 
     private void addEntryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addEntryButtonActionPerformed
         DictionaryEntryPanel2 panel = new DictionaryEntryPanel2("", "");
@@ -144,13 +151,15 @@ public class MainFrame2 extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        processButton = new javax.swing.JButton();
+        processSecuritateButton = new javax.swing.JButton();
+        processIncendiuButton = new javax.swing.JButton();
         textPannel = new javax.swing.JPanel();
         dictionaryPannel = new javax.swing.JPanel();
         addEntryButton = new javax.swing.JButton();
         saveDictionaryButton = new javax.swing.JButton();
         reloadDictionaryButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
 
         dictionaryScrollPane = new JScrollPane(dictionaryPannel);
         dictionaryScrollPane.setPreferredSize(new Dimension(700, 800));
@@ -160,10 +169,17 @@ public class MainFrame2 extends javax.swing.JFrame {
         setMinimumSize(new java.awt.Dimension(1024, 800));
         setSize(new java.awt.Dimension(1024, 800));
 
-        processButton.setText("Proceseaza");
-        processButton.addActionListener(new java.awt.event.ActionListener() {
+        processSecuritateButton.setText("Proceseaza Analiza Securitate");
+        processSecuritateButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                processButtonActionPerformed(evt);
+                processSecuritateButtonActionPerformed(evt);
+            }
+        });
+
+        processIncendiuButton.setText("Proceseaza Analiza Incendiu");
+        processIncendiuButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                processIncendiuButtonActionPerformed(evt);
             }
         });
 
@@ -422,6 +438,11 @@ public class MainFrame2 extends javax.swing.JFrame {
                 "</ol>\n</html>");
         jLabel1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 
+        jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/info3.png"))); // NOI18N
+        jLabel2.setToolTipText("<html>\nProcesarea textului de mai jos se face in urmatorul fel:");
+        jLabel2.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -431,9 +452,13 @@ public class MainFrame2 extends javax.swing.JFrame {
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addComponent(textPannel, javax.swing.GroupLayout.PREFERRED_SIZE, 860, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addGroup(layout.createSequentialGroup()
-                                                .addComponent(processButton)
+                                                .addComponent(processSecuritateButton)
+//                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel1)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel1)))
+                                                .addComponent(processIncendiuButton)
+//                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel2)))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addGroup(layout.createSequentialGroup()
@@ -451,11 +476,13 @@ public class MainFrame2 extends javax.swing.JFrame {
                         .addGroup(layout.createSequentialGroup()
                                 .addContainerGap()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(processButton)
+                                        .addComponent(processSecuritateButton)
+                                        .addComponent(processIncendiuButton)
                                         .addComponent(addEntryButton)
                                         .addComponent(saveDictionaryButton)
                                         .addComponent(reloadDictionaryButton)
-                                        .addComponent(jLabel1))
+                                        .addComponent(jLabel1)
+                                        .addComponent(jLabel2))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addComponent(textPannel, javax.swing.GroupLayout.DEFAULT_SIZE, 757, Short.MAX_VALUE)
@@ -471,7 +498,9 @@ public class MainFrame2 extends javax.swing.JFrame {
     private javax.swing.JButton addEntryButton;
     private javax.swing.JPanel dictionaryPannel;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JButton processButton;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JButton processSecuritateButton;
+    private javax.swing.JButton processIncendiuButton;
     private javax.swing.JButton reloadDictionaryButton;
     private javax.swing.JButton saveDictionaryButton;
     private javax.swing.JPanel textPannel;
