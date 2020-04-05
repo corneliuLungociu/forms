@@ -20,7 +20,8 @@ import java.util.Map;
 public class DocumentProcessorImpl implements DocumentProcessor {
 
     private static final Gson jsonParser = new GsonBuilder().setPrettyPrinting().create();
-    private static final String DICTIONARY_FILE = "config/dictionary.json";
+    private static final String DOC_TYPE_PLACEHOLDER = "[TYPE]";
+    private static final String DICTIONARY_FILE = "config/dictionary_" + DOC_TYPE_PLACEHOLDER + ".json";
 
     @Override
     public String process(String rawText, Map<String, String> actualDictionary, DocumentType documentType) {
@@ -42,16 +43,15 @@ public class DocumentProcessorImpl implements DocumentProcessor {
     }
 
     @Override
-    public Map<String, String> getDictionary() throws FileNotFoundException {
-        Type type = new TypeToken<LinkedHashMap<String, String>>() {
-        }.getType();
-        return jsonParser.fromJson(new FileReader(DICTIONARY_FILE), type);
+    public Map<String, String> getDictionary(DocumentType documentType) throws FileNotFoundException {
+        Type type = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
+        return jsonParser.fromJson(new FileReader(DICTIONARY_FILE.replace(DOC_TYPE_PLACEHOLDER, documentType.name())), type);
     }
 
     @Override
-    public void saveDictionary(Map<String, String> actualDictionary) throws IOException {
+    public void saveDictionary(DocumentType documentType, Map<String, String> actualDictionary) throws IOException {
         String dictionaryString = jsonParser.toJson(actualDictionary);
-        Files.write(Paths.get(DICTIONARY_FILE), dictionaryString.getBytes("UTF-8"));
+        Files.write(Paths.get(DICTIONARY_FILE.replace(DOC_TYPE_PLACEHOLDER, documentType.name())), dictionaryString.getBytes("UTF-8"));
     }
 
 

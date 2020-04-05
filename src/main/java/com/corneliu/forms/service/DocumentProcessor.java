@@ -10,7 +10,7 @@ public interface DocumentProcessor {
 
     String cleanMarkup(String rawText);
 
-    Map<String, String> getDictionary() throws FileNotFoundException;
+    Map<String, String> getDictionary(DocumentType documentType) throws FileNotFoundException;
 
-    void saveDictionary(Map<String, String> actualDictionary) throws IOException;
+    void saveDictionary(DocumentType documentType, Map<String, String> actualDictionary) throws IOException;
 }

@@ -1,6 +1,7 @@
 - ordine in dictionar
-- selectare dictionar   (pentru document incendiu vs petru document securitate)
 
+
+- selectare dictionar   (pentru document incendiu vs petru document securitate) - DONE
 - cautare in dictionar                              - DONE
 - show asterisk when the dictionary is not saved    - DONE
 - if line is empyt, skip and continue               - DONE

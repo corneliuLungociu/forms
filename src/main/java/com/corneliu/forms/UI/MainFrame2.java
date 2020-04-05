@@ -12,6 +12,8 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -130,10 +132,7 @@ public class MainFrame2 extends javax.swing.JFrame {
     private void saveDictionaryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveDictionaryButtonActionPerformed
         Map<String, String> actualDictionary = computeActualDictionary();
         try {
-            textProcessor.saveDictionary(actualDictionary);
-            ((TitledBorder)dictionaryPannel.getBorder()).setTitle("Dictionar");
-            ((TitledBorder)dictionaryPannel.getBorder()).setBorder(new LineBorder(Color.BLACK));
-            ((TitledBorder)dictionaryPannel.getBorder()).setTitleColor(Color.BLACK);
+            textProcessor.saveDictionary(getDocumentType(), actualDictionary);
             reloadDictionary();
         } catch (IOException e) {
             JOptionPane.showConfirmDialog(this, "Nu a reusit salvarea dictionarului." + e.getMessage());
@@ -141,21 +140,22 @@ public class MainFrame2 extends javax.swing.JFrame {
     }//GEN-LAST:event_saveDictionaryButtonActionPerformed
 
     private void reloadDictionaryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reloadDictionaryButtonActionPerformed
+        reloadDictionary();
+    }//GEN-LAST:event_reloadDictionaryButtonActionPerformed
+
+    private void reloadDictionary() {
         try {
             ((TitledBorder)dictionaryPannel.getBorder()).setTitle("Dictionar");
             ((TitledBorder)dictionaryPannel.getBorder()).setBorder(new LineBorder(Color.BLACK));
             ((TitledBorder)dictionaryPannel.getBorder()).setTitleColor(Color.BLACK);
-            reloadDictionary();
-        } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(this, "Failed to reload the dictionary." + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }//GEN-LAST:event_reloadDictionaryButtonActionPerformed
 
-    private void reloadDictionary() throws FileNotFoundException {
-        clearDictionary();
-        loadDictionary();
-        this.pack();
-        this.repaint();
+            clearDictionary();
+            loadDictionary();
+            this.pack();
+            this.repaint();
+        } catch (FileNotFoundException e) {
+            JOptionPane.showConfirmDialog(this, "Nu a reusit incarcarea dictionarului." + e.getMessage());
+        }
     }
 
     private Map<String, String> computeActualDictionary() {
@@ -183,7 +183,7 @@ public class MainFrame2 extends javax.swing.JFrame {
 
     private void loadDictionary() throws FileNotFoundException {
         totalDictionaryEntries = 0;
-        for (Map.Entry<String, String> dictionaryEntry : textProcessor.getDictionary().entrySet()) {
+        for (Map.Entry<String, String> dictionaryEntry : textProcessor.getDictionary(getDocumentType()).entrySet()) {
             DictionaryEntryPanel2 panel = new DictionaryEntryPanel2(dictionaryEntry.getKey(), dictionaryEntry.getValue(), totalDictionaryEntries++);
             dictionaryPannel.add(panel);
 
@@ -192,12 +192,28 @@ public class MainFrame2 extends javax.swing.JFrame {
         }
     }
 
+    private DocumentType getDocumentType() {
+        if (documentIncendiuRadio.isSelected()) {
+            return DocumentType.INCENDIU;
+        } else {
+            return DocumentType.SECURITATE;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        processSecuritateButton = new javax.swing.JButton();
-        processIncendiuButton = new javax.swing.JButton();
+        processDocumentButton = new javax.swing.JButton();
+        documentIncendiuRadio = new JRadioButton("Incendiu", false);
+        documentSecuritateRadio = new JRadioButton("Securitate", true);
+        documentTypeGroup = new ButtonGroup();
+        documentTypeGroup.add(documentIncendiuRadio);
+        documentTypeGroup.add(documentSecuritateRadio);
+
+        documentIncendiuRadio.addActionListener(e -> reloadDictionary());
+        documentSecuritateRadio.addActionListener(e -> reloadDictionary());
+
         textPannel = new javax.swing.JPanel();
         dictionaryPannel = new javax.swing.JPanel();
         addEntryButton = new javax.swing.JButton();
@@ -234,17 +250,10 @@ public class MainFrame2 extends javax.swing.JFrame {
         setMinimumSize(new java.awt.Dimension(1024, 800));
         setSize(new java.awt.Dimension(1024, 800));
 
-        processSecuritateButton.setText("Proceseaza Analiza Securitate");
-        processSecuritateButton.addActionListener(new java.awt.event.ActionListener() {
+        processDocumentButton.setText("Proceseaza Document");
+        processDocumentButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 processSecuritateButtonActionPerformed(evt);
-            }
-        });
-
-        processIncendiuButton.setText("Proceseaza Analiza Incendiu");
-        processIncendiuButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                processIncendiuButtonActionPerformed(evt);
             }
         });
 
@@ -503,9 +512,7 @@ public class MainFrame2 extends javax.swing.JFrame {
                 "</ol>\n</html>");
         jLabel1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 
-        jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/info3.png"))); // NOI18N
-        jLabel2.setToolTipText("<html>\nProcesarea textului de mai jos se face in urmatorul fel:");
-        jLabel2.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jLabel2.setText("Tipul Documentului: ");
 
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -517,13 +524,17 @@ public class MainFrame2 extends javax.swing.JFrame {
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addComponent(textPannel, javax.swing.GroupLayout.PREFERRED_SIZE, 860, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addGroup(layout.createSequentialGroup()
-                                                .addComponent(processSecuritateButton)
-//                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel1)
+                                                .addComponent(jLabel2)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(processIncendiuButton)
-//                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel2)))
+                                                .addComponent(documentIncendiuRadio)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(documentSecuritateRadio)
+                                        )
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addComponent(processDocumentButton)
+                                                .addComponent(jLabel1)
+                                        )
+                                )
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addGroup(layout.createSequentialGroup()
@@ -532,12 +543,12 @@ public class MainFrame2 extends javax.swing.JFrame {
                                                 .addComponent(saveDictionaryButton)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addComponent(reloadDictionaryButton)
-                                                .addGap(0, 0, Short.MAX_VALUE))
+                                        )
                                         .addGroup(layout.createSequentialGroup()
                                                 .addComponent(findLabel)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addComponent(findText)
-                                                .addGap(0, 0, Short.MAX_VALUE))
+                                        )
                                         .addComponent(dictionaryScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 587, Short.MAX_VALUE))
                                 .addContainerGap())
         );
@@ -546,17 +557,20 @@ public class MainFrame2 extends javax.swing.JFrame {
                         .addGroup(layout.createSequentialGroup()
                                 .addContainerGap()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(processSecuritateButton)
-                                        .addComponent(processIncendiuButton)
+                                        .addComponent(jLabel2)
+                                        .addComponent(documentSecuritateRadio)
+                                        .addComponent(documentIncendiuRadio)
                                         .addComponent(addEntryButton)
                                         .addComponent(saveDictionaryButton)
                                         .addComponent(reloadDictionaryButton)
-                                        .addComponent(jLabel1)
-                                        .addComponent(jLabel2))
+                                )
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(processDocumentButton)
+                                        .addComponent(jLabel1)
                                         .addComponent(findLabel)
-                                        .addComponent(findText))
+                                        .addComponent(findText)
+                                )
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addComponent(textPannel, javax.swing.GroupLayout.DEFAULT_SIZE, 757, Short.MAX_VALUE)
@@ -587,8 +601,12 @@ public class MainFrame2 extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel textPannel;
-    private javax.swing.JButton processSecuritateButton;
-    private javax.swing.JButton processIncendiuButton;
+    private javax.swing.JButton processDocumentButton;
+
+    private javax.swing.JRadioButton documentIncendiuRadio;
+    private javax.swing.JRadioButton documentSecuritateRadio;
+    private javax.swing.ButtonGroup documentTypeGroup;
+
     private javax.swing.JButton addEntryButton;
     private javax.swing.JButton reloadDictionaryButton;
     private javax.swing.JButton saveDictionaryButton;
