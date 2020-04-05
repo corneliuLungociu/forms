@@ -76,7 +76,7 @@ public class IncendiuTablesProcessor implements TablesProcessor {
                 totalActiv += bucati * consumActiv;
                 totalStandBy += bucati * consumStandBy;
             } catch (NumberFormatException e) {
-                return;
+                // do nothing. just continue to the next row.
             }
         }
 
@@ -85,7 +85,7 @@ public class IncendiuTablesProcessor implements TablesProcessor {
 
         coloanePenultimulRand.get(1).text(String.format("%.3f", totalStandBy * 48));
         coloanePenultimulRand.get(3).text(String.format("%.3f", totalActiv / 2));
-        coloaneUltimulRand.last().text(String.format("%.3f", totalStandBy * 48 + totalActiv / 2));
+        coloaneUltimulRand.last().text(String.format("%.3f", (totalStandBy * 48 + totalActiv / 2) / 1000));
     }
 
     private String getTableType(Element table) {

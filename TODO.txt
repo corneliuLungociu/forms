@@ -1,8 +1,7 @@
-DONE - validate tables (ignore tables with text on col2 si 3)
-DONE - verifica skip empy lines on total
+- ordine in dictionar
+- selectare dictionar   (pentru document incendiu vs petru document securitate)
 
-DONE remove <colgroup> si <col> tags
-DONE remove <o> si <o:p> tags
-
-DONE - formule tabel cu 4 col
-- formule tabel cu 5 col
+- cautare in dictionar                              - DONE
+- show asterisk when the dictionary is not saved    - DONE
+- if line is empyt, skip and continue               - DONE
+- Capacitate ups - to multiply by 10                - DONE

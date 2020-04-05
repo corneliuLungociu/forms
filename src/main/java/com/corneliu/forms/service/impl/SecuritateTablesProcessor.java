@@ -66,7 +66,7 @@ public class SecuritateTablesProcessor implements TablesProcessor {
                     Elements rows = table.select("tr");
                     rows.get(rows.size() - 3).select("td").last().text(String.format("%.2f", total));
                     rows.get(rows.size() - 2).select("td").last().text(String.format("%.2f", total));
-                    rows.get(rows.size() - 1).select("td").last().text(String.format("%.2f", total / 0.55 / 3));
+                    rows.get(rows.size() - 1).select("td").last().text(String.format("%.2f", (total / 0.55 / 3) * 10));
                     break;
                 }
             }

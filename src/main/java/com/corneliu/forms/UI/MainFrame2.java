@@ -1,12 +1,16 @@
 package com.corneliu.forms.UI;
 
-import com.corneliu.forms.service.DocumentType;
 import com.corneliu.forms.service.DocumentProcessor;
+import com.corneliu.forms.service.DocumentType;
 import com.corneliu.forms.service.impl.DocumentProcessorImpl;
 import com.hexidec.ekit.EkitCore;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,7 +22,8 @@ public class MainFrame2 extends javax.swing.JFrame {
     private DocumentProcessor textProcessor;
     private EkitCore editor1;
     private JScrollPane dictionaryScrollPane;
-//    private HTMLEditorPane editor2;
+    private int totalDictionaryEntries;
+    //    private HTMLEditorPane editor2;
 
 
     public MainFrame2() throws FileNotFoundException {
@@ -86,16 +91,49 @@ public class MainFrame2 extends javax.swing.JFrame {
     }//GEN-LAST:event_processIncendiuButtonActionPerformed
 
     private void addEntryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addEntryButtonActionPerformed
-        DictionaryEntryPanel2 panel = new DictionaryEntryPanel2("", "");
+        DictionaryEntryPanel2 panel = new DictionaryEntryPanel2("", "", totalDictionaryEntries++);
         dictionaryPannel.add(panel);
         panel.getKeyText().grabFocus();
+
+        panel.getKeyText().getDocument().addDocumentListener(markUnsavedDictionary(this));
+        panel.getValueText().getDocument().addDocumentListener(markUnsavedDictionary(this));
+
         this.pack();
     }//GEN-LAST:event_addEntryButtonActionPerformed
+
+    private DocumentListener markUnsavedDictionary(MainFrame2 mainFrame) {
+        return new DocumentListener() {
+              public void changedUpdate(DocumentEvent e) {
+                  ((TitledBorder)dictionaryPannel.getBorder()).setTitle("Dictionar *  -  Exista modificari nesalvate!");
+                  ((TitledBorder)dictionaryPannel.getBorder()).setTitleColor(Color.RED);
+                  ((TitledBorder)dictionaryPannel.getBorder()).setBorder(new LineBorder(Color.RED));
+                  mainFrame.pack();
+                  mainFrame.repaint();
+              }
+              public void removeUpdate(DocumentEvent e) {
+                  ((TitledBorder)dictionaryPannel.getBorder()).setTitle("Dictionar *  -  Exista modificari nesalvate!");
+                  ((TitledBorder)dictionaryPannel.getBorder()).setTitleColor(Color.RED);
+                  ((TitledBorder)dictionaryPannel.getBorder()).setBorder(new LineBorder(Color.RED));
+                  mainFrame.pack();
+                  mainFrame.repaint();
+              }
+              public void insertUpdate(DocumentEvent e) {
+                  ((TitledBorder)dictionaryPannel.getBorder()).setTitle("Dictionar *  -  Exista modificari nesalvate!");
+                  ((TitledBorder)dictionaryPannel.getBorder()).setTitleColor(Color.RED);
+                  ((TitledBorder)dictionaryPannel.getBorder()).setBorder(new LineBorder(Color.RED));
+                  mainFrame.pack();
+                  mainFrame.repaint();
+              }
+        };
+    }
 
     private void saveDictionaryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveDictionaryButtonActionPerformed
         Map<String, String> actualDictionary = computeActualDictionary();
         try {
             textProcessor.saveDictionary(actualDictionary);
+            ((TitledBorder)dictionaryPannel.getBorder()).setTitle("Dictionar");
+            ((TitledBorder)dictionaryPannel.getBorder()).setBorder(new LineBorder(Color.BLACK));
+            ((TitledBorder)dictionaryPannel.getBorder()).setTitleColor(Color.BLACK);
             reloadDictionary();
         } catch (IOException e) {
             JOptionPane.showConfirmDialog(this, "Nu a reusit salvarea dictionarului." + e.getMessage());
@@ -104,6 +142,9 @@ public class MainFrame2 extends javax.swing.JFrame {
 
     private void reloadDictionaryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reloadDictionaryButtonActionPerformed
         try {
+            ((TitledBorder)dictionaryPannel.getBorder()).setTitle("Dictionar");
+            ((TitledBorder)dictionaryPannel.getBorder()).setBorder(new LineBorder(Color.BLACK));
+            ((TitledBorder)dictionaryPannel.getBorder()).setTitleColor(Color.BLACK);
             reloadDictionary();
         } catch (FileNotFoundException e) {
             JOptionPane.showMessageDialog(this, "Failed to reload the dictionary." + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -141,9 +182,13 @@ public class MainFrame2 extends javax.swing.JFrame {
     }
 
     private void loadDictionary() throws FileNotFoundException {
+        totalDictionaryEntries = 0;
         for (Map.Entry<String, String> dictionaryEntry : textProcessor.getDictionary().entrySet()) {
-            DictionaryEntryPanel2 panel = new DictionaryEntryPanel2(dictionaryEntry.getKey(), dictionaryEntry.getValue());
+            DictionaryEntryPanel2 panel = new DictionaryEntryPanel2(dictionaryEntry.getKey(), dictionaryEntry.getValue(), totalDictionaryEntries++);
             dictionaryPannel.add(panel);
+
+            panel.getKeyText().getDocument().addDocumentListener(markUnsavedDictionary(this));
+            panel.getValueText().getDocument().addDocumentListener(markUnsavedDictionary(this));
         }
     }
 
@@ -160,6 +205,26 @@ public class MainFrame2 extends javax.swing.JFrame {
         reloadDictionaryButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
+
+        findLabel = new JLabel("Cauta:");
+        findText = new JTextField();
+        findText.setMaximumSize(new Dimension(420, 15));
+        findText.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                findEntry(findText.getText());
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                findEntry(findText.getText());
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                findEntry(findText.getText());
+            }
+        });
 
         dictionaryScrollPane = new JScrollPane(dictionaryPannel);
         dictionaryScrollPane.setPreferredSize(new Dimension(700, 800));
@@ -183,10 +248,10 @@ public class MainFrame2 extends javax.swing.JFrame {
             }
         });
 
-        textPannel.setBorder(javax.swing.BorderFactory.createTitledBorder("Text"));
+        textPannel.setBorder(javax.swing.BorderFactory.createTitledBorder( "Text"));
         textPannel.setLayout(new javax.swing.BoxLayout(textPannel, javax.swing.BoxLayout.Y_AXIS));
 
-        dictionaryPannel.setBorder(javax.swing.BorderFactory.createTitledBorder("Dictionar"));
+        dictionaryPannel.setBorder(javax.swing.BorderFactory.createTitledBorder(new LineBorder(Color.BLACK), "Dictionar"));
         dictionaryPannel.setLayout(new javax.swing.BoxLayout(dictionaryPannel, javax.swing.BoxLayout.Y_AXIS));
 
         addEntryButton.setText("Adauga Intrare");
@@ -468,6 +533,11 @@ public class MainFrame2 extends javax.swing.JFrame {
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addComponent(reloadDictionaryButton)
                                                 .addGap(0, 0, Short.MAX_VALUE))
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addComponent(findLabel)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(findText)
+                                                .addGap(0, 0, Short.MAX_VALUE))
                                         .addComponent(dictionaryScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 587, Short.MAX_VALUE))
                                 .addContainerGap())
         );
@@ -485,6 +555,10 @@ public class MainFrame2 extends javax.swing.JFrame {
                                         .addComponent(jLabel2))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(findLabel)
+                                        .addComponent(findText))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addComponent(textPannel, javax.swing.GroupLayout.DEFAULT_SIZE, 757, Short.MAX_VALUE)
                                         .addComponent(dictionaryScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                                 .addContainerGap())
@@ -493,17 +567,33 @@ public class MainFrame2 extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void findEntry(String text) {
+        for (Component component : dictionaryPannel.getComponents()) {
+            if (component instanceof DictionaryEntryPanel2) {
+                if (!((DictionaryEntryPanel2) component).getKeyText().getText().toLowerCase().contains(text.toLowerCase())) {
+                    component.setVisible(false);
+                } else {
+                    component.setVisible(true);
+                }
+            }
+        }
+        this.pack();
+        this.repaint();
+    }
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton addEntryButton;
     private javax.swing.JPanel dictionaryPannel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JPanel textPannel;
     private javax.swing.JButton processSecuritateButton;
     private javax.swing.JButton processIncendiuButton;
+    private javax.swing.JButton addEntryButton;
     private javax.swing.JButton reloadDictionaryButton;
     private javax.swing.JButton saveDictionaryButton;
-    private javax.swing.JPanel textPannel;
+    private javax.swing.JLabel findLabel;
+    private javax.swing.JTextField findText;
     // End of variables declaration//GEN-END:variables
 
 
