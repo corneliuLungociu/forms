@@ -80,7 +80,7 @@ public class SecuritateTablesProcessor implements TablesProcessor {
                         .put(TableType.CONSUM_ALARMA_STANDBY.name(), "")
                         .put(TableType.CONSUM_ALARMA_ACTIVAT.name(), "")
                         .put(TableType.CONSUM_VIDEO.name(), "")
-                        .put("CONSUM_ALARMA_TOTAL", String.valueOf((consumAlarmaActivat + consumAlarmaStandby) * 1.25))
+                        .put("CONSUM_ALARMA_TOTAL", String.format("%.2f", (consumAlarmaActivat + consumAlarmaStandby) * 1.25))
                         .build()),
                 "[", "]", '!');
 
