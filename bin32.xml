@@ -21,14 +21,15 @@
             <directory>config</directory>
             <outputDirectory>config</outputDirectory>
             <includes>
-                <include>dictionary.json</include>
+                <include>dictionary_INCENDIU.json</include>
+                <include>dictionary_SECURITATE.json</include>
             </includes>
         </fileSet>
         <fileSet>
             <directory>target</directory>
             <outputDirectory>.</outputDirectory>
             <includes>
-                <include>forms-1.5-32.exe</include>
+                <include>forms-2.1-32.exe</include>
             </includes>
         </fileSet>
     </fileSets>

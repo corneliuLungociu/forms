@@ -353,23 +353,6 @@ public class MainFrame2 extends javax.swing.JFrame {
         this.repaint();
     }
 
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel dictionaryPannel;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JPanel textPannel;
-    private javax.swing.JButton processDocumentButton;
-
-    private javax.swing.JRadioButton documentIncendiuRadio;
-    private javax.swing.JRadioButton documentSecuritateRadio;
-    private javax.swing.ButtonGroup documentTypeGroup;
-
-    private javax.swing.JButton addEntryButton;
-    private javax.swing.JButton reloadDictionaryButton;
-    private javax.swing.JButton saveDictionaryButton;
-    private javax.swing.JLabel findLabel;
-    private javax.swing.JTextField findText;
-
     public void moveDictionary(int sourceIndex, int targetIndex) {
         Component component = dictionaryPannel.getComponent(sourceIndex);
         dictionaryPannel.remove(sourceIndex);
@@ -389,6 +372,23 @@ public class MainFrame2 extends javax.swing.JFrame {
         this.pack();
         this.repaint();
     }
+
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel dictionaryPannel;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JPanel textPannel;
+    private javax.swing.JButton processDocumentButton;
+
+    private javax.swing.JRadioButton documentIncendiuRadio;
+    private javax.swing.JRadioButton documentSecuritateRadio;
+    private javax.swing.ButtonGroup documentTypeGroup;
+
+    private javax.swing.JButton addEntryButton;
+    private javax.swing.JButton reloadDictionaryButton;
+    private javax.swing.JButton saveDictionaryButton;
+    private javax.swing.JLabel findLabel;
+    private javax.swing.JTextField findText;
     // End of variables declaration//GEN-END:variables
 
 
