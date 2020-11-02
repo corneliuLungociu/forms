@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.corneliu</groupId>
     <artifactId>forms</artifactId>
-    <version>2.1</version>
+    <version>2.2</version>
     <properties>
         <spring.version>4.3.7.RELEASE</spring.version>
     </properties>

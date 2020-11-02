@@ -5,6 +5,7 @@ import com.corneliu.forms.service.TablesProcessor;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -16,9 +17,15 @@ import java.util.Map;
 public class SecuritateTablesProcessor implements TablesProcessor {
 
     private enum TableType {
-        CONSUM_ALARMA,
-        CONSUM_VIDEO,
-        OTHER
+        CONSUM_ALARMA("CONSUM_ALARMA_"),
+        CONSUM_VIDEO("CONSUM_VIDEO_"),
+        OTHER("__NON_EXISTENT_TABLE_PREFIX__");
+
+        private final String prefix;
+
+        TableType(String prefix) {
+            this.prefix = prefix;
+        }
     }
 
     @Override
@@ -29,11 +36,13 @@ public class SecuritateTablesProcessor implements TablesProcessor {
     }
 
     private String processDocumentSecuritate(Document document, Elements tables) {
-        double consumAlarmaTotal = 0;
+        Map<String, String> consumAlarmaTotal = new HashMap<>();
+
         for (Element table : tables) {
-            switch (getTableType(table)) {
+            Pair<TableType, String> tableType = getTableType(table);
+            switch (tableType.getLeft()) {
                 case CONSUM_ALARMA: {
-                    Map<Integer, ConsumComponenta> sumPerRow = fillSumPerRowForAlarma(table, 3);
+                    Map<Integer, ConsumComponenta> sumPerRow = fillSumPerRowForAlarma(tableType.getRight(), table, 3);
 
                     double totalStandBy = sumPerRow.values().stream().mapToDouble(consum -> consum.standBy).sum() * 23.5;
                     double totalActivat = sumPerRow.values().stream().mapToDouble(consum -> consum.activat).sum() * 0.5;
@@ -43,12 +52,13 @@ public class SecuritateTablesProcessor implements TablesProcessor {
                     rows.get(rows.size() - 2).select("td").last().text(String.format("%.2f", totalActivat));
                     rows.get(rows.size() - 1).select("td").last().text(String.format("%.2f", totalStandBy + totalActivat));
 
-                    consumAlarmaTotal = 1.25 * (totalStandBy + totalActivat) / 1000;
+                    String sufix = tableType.getRight().replace(tableType.getLeft().prefix, "");
+                    consumAlarmaTotal.put("CONSUM_ALARMA_TOTAL_" + sufix, String.format("%.2f", 1.25 * (totalStandBy + totalActivat) / 1000));
 
                     break;
                 }
                 case CONSUM_VIDEO: {
-                    Map<Integer, Float> sumPerRow = fillSumPerRowForVideo(table, 3);
+                    Map<Integer, Float> sumPerRow = fillSumPerRowForVideo(table, 3, tableType.getRight());
 
                     double total = sumPerRow.values().stream().mapToDouble(Double::valueOf).sum();
 
@@ -68,19 +78,18 @@ public class SecuritateTablesProcessor implements TablesProcessor {
                         .<String, String>builder()
                         .put(TableType.CONSUM_ALARMA.name(), "")
                         .put(TableType.CONSUM_VIDEO.name(), "")
-                        .put("CONSUM_ALARMA_TOTAL", String.format("%.2f", consumAlarmaTotal))
+                        .putAll(consumAlarmaTotal)
                         .build()),
                 "[", "]", '!');
 
         return dictionarySubst.replace(processedDocument);
+
+
     }
 
-    private Map<Integer, ConsumComponenta> fillSumPerRowForAlarma(Element table, int footerSize) {
+    private Map<Integer, ConsumComponenta> fillSumPerRowForAlarma(String tableType, Element table, int footerSize) {
 
-        Map<Integer, ConsumComponenta> tableData = extractDataFrom8ColumnsTable(table, footerSize);
-        if (tableData == null) {
-            return null;
-        }
+        Map<Integer, ConsumComponenta> tableData = extractDataFrom8ColumnsTable(tableType, table, footerSize);
 
         Elements rows = table.select("tr");
         for (Map.Entry<Integer, ConsumComponenta> tableDataEntry : tableData.entrySet()) {
@@ -93,12 +102,9 @@ public class SecuritateTablesProcessor implements TablesProcessor {
         return tableData;
     }
 
-    private Map<Integer, Float> fillSumPerRowForVideo(Element table, int footerSize) {
+    private Map<Integer, Float> fillSumPerRowForVideo(Element table, int footerSize, String tableType) {
 
-        Map<Integer, Float> tableData = extractDataFrom4ColumnsTable(table, footerSize);
-        if (tableData == null) {
-            return null;
-        }
+        Map<Integer, Float> tableData = extractDataFrom4ColumnsTable(table, footerSize, tableType);
 
         Elements rows = table.select("tr");
         for (Map.Entry<Integer, Float> tableDataEntry : tableData.entrySet()) {
@@ -108,19 +114,19 @@ public class SecuritateTablesProcessor implements TablesProcessor {
         return tableData;
     }
 
-    private Map<Integer, Float> extractDataFrom4ColumnsTable(Element table, int footerSize) {
+    private Map<Integer, Float> extractDataFrom4ColumnsTable(Element table, int footerSize, String tableType) {
         Map<Integer, Float> data = new HashMap<>();
 
         Elements rows = table.select("tr");
         if (rows.size() < footerSize + 1) {
-            return null;
+            throw new RuntimeException(String.format("Tabelul '" + tableType + "' este invalid. Trebuie sa aiba cel putin %s randuri, dar are %s randuri ", footerSize + 1, rows.size()));
         }
 
         for (int i = 1; i < rows.size() - footerSize; i++) {
             Element row = rows.get(i);
             Elements columns = row.select("td");
             if (columns.size() != 4 ) {
-                return null;
+                throw new RuntimeException("Tabelul ' " + tableType + " ' este invalid. Trebuie sa aiba 4 coloane, dar are: " + columns.size());
             }
 
             try {
@@ -134,26 +140,26 @@ public class SecuritateTablesProcessor implements TablesProcessor {
                 float col3 = textToNumber(col3Text);
                 data.put(i, col2 * col3);
             } catch (NumberFormatException e) {
-                return null;
+                throw new RuntimeException("Tabelul '" + tableType + "' este invalid. Textul din celula nu este un numar: " + e.getMessage());
             }
         }
 
         return data;
     }
 
-    private Map<Integer, ConsumComponenta> extractDataFrom8ColumnsTable(Element table, int footerSize) {
+    private Map<Integer, ConsumComponenta> extractDataFrom8ColumnsTable(String tableType, Element table, int footerSize) {
         Map<Integer, ConsumComponenta> data = new HashMap<>();
 
         Elements rows = table.select("tr");
         if (rows.size() < footerSize + 1) {
-            return null;
+            throw new RuntimeException(String.format("Tabelul '" + tableType + "' este invalid. Trebuie sa aiba cel putin %s randuri, dar are %s randuri ", footerSize + 1, rows.size()));
         }
 
         for (int i = 1; i < rows.size() - footerSize; i++) {
             Element row = rows.get(i);
             Elements columns = row.select("td");
             if (columns.size() != 8 ) {
-                return null;
+                throw new RuntimeException("Tabelul ' " + tableType + " ' este invalid. Trebuie sa aiba 8 coloane, dar are: " + columns.size());
             }
 
             try {
@@ -169,22 +175,25 @@ public class SecuritateTablesProcessor implements TablesProcessor {
                 float col6 = textToNumber(col6Text);
                 data.put(i, new ConsumComponenta(col2*col3, col2*col6));
             } catch (NumberFormatException e) {
-                return null;
+                throw new RuntimeException("Tabelul '" + tableType + "' este invalid. Textul din celula nu este un numar: " + e.getMessage());
             }
         }
 
         return data;
     }
 
-    private TableType getTableType(Element table) {
-        String text = table.select("tr").first().select("td").first().text();
+    private Pair<TableType, String> getTableType(Element table) {
+        Element first = table.select("tr").first().select("td").first();
+        String text = first.text();
         for (TableType tableType : TableType.values()) {
-            if (text.contains("[" + tableType + "]")) {
-                return tableType;
+            if (text.contains(tableType.prefix)) {
+                String tableName = text.substring(text.indexOf('[') + 1, text.indexOf(']'));
+                first.text(first.text().replace("[" + tableName + "]", ""));
+                return Pair.of(tableType, tableName);
             }
         }
 
-        return TableType.OTHER;
+        return Pair.of(TableType.OTHER, "");
     }
 
     private float textToNumber(String col1Text) {

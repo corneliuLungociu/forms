@@ -29,7 +29,7 @@
             <directory>target</directory>
             <outputDirectory>.</outputDirectory>
             <includes>
-                <include>forms-2.1.exe</include>
+                <include>forms-2.2.exe</include>
             </includes>
         </fileSet>
     </fileSets>

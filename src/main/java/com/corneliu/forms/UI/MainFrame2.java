@@ -75,9 +75,14 @@ public class MainFrame2 extends javax.swing.JFrame {
     }
 
     private void processDocumentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_processSecuritateButtonActionPerformed
-        Map<String, String> actualDictionary = computeActualDictionary();
-        String processedText = textProcessor.process(editor1.getDocumentText(), actualDictionary, getDocumentType());
-        editor1.setDocumentText(processedText);
+        try {
+            Map<String, String> actualDictionary = computeActualDictionary();
+            String processedText = textProcessor.process(editor1.getDocumentText(), actualDictionary, getDocumentType());
+            editor1.setDocumentText(processedText);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
+            e.printStackTrace();
+        }
 
     }//GEN-LAST:event_processSecuritateButtonActionPerformed
 
