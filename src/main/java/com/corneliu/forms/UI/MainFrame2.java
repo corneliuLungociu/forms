@@ -129,7 +129,7 @@ public class MainFrame2 extends javax.swing.JFrame {
             textProcessor.saveDictionary(getDocumentType(), actualDictionary);
             reloadDictionary();
         } catch (IOException e) {
-            JOptionPane.showConfirmDialog(this, "Nu a reusit salvarea dictionarului." + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Nu a reusit salvarea dictionarului." + e.getMessage());
         }
     }//GEN-LAST:event_saveDictionaryButtonActionPerformed
 
@@ -137,7 +137,7 @@ public class MainFrame2 extends javax.swing.JFrame {
         reloadDictionary();
     }//GEN-LAST:event_reloadDictionaryButtonActionPerformed
 
-    private void reloadDictionary() {
+    public void reloadDictionary() {
         try {
             ((TitledBorder)dictionaryPannel.getBorder()).setTitle("Dictionar");
             ((TitledBorder)dictionaryPannel.getBorder()).setBorder(new LineBorder(Color.BLACK));
@@ -147,8 +147,11 @@ public class MainFrame2 extends javax.swing.JFrame {
             loadDictionary();
             this.pack();
             this.repaint();
-        } catch (FileNotFoundException e) {
-            JOptionPane.showConfirmDialog(this, "Nu a reusit incarcarea dictionarului." + e.getMessage());
+        } catch (Exception e) {
+            clearDictionary();
+            this.pack();
+            this.repaint();
+            JOptionPane.showMessageDialog(this, "Nu a reusit incarcarea dictionarului." + e.getMessage());
         }
     }
 
@@ -187,10 +190,20 @@ public class MainFrame2 extends javax.swing.JFrame {
     }
 
     private DocumentType getDocumentType() {
-        if (documentIncendiuRadio.isSelected()) {
-            return DocumentType.INCENDIU;
+        if (computingDocumentRadio.isSelected()) {
+            String selectedItem = (String) computingDocumentSelectionPanel.getComputingDocTypeCombo().getSelectedItem();
+            if (selectedItem.equalsIgnoreCase(DocumentType.INCENDIU.name())) {
+                return DocumentType.INCENDIU;
+            } else {
+                return DocumentType.SECURITATE;
+            }
         } else {
-            return DocumentType.SECURITATE;
+            String selectedItem = (String) simpleDocumentSelectionPanel.getSimpleDocTypeCombo().getSelectedItem();
+            if (selectedItem == null) {
+                throw new RuntimeException("Niciun Document Selectat.");
+            }
+            DocumentType.SIMPLE.setName(selectedItem.toUpperCase().replace(" ", "_"));
+            return DocumentType.SIMPLE;
         }
     }
 
@@ -198,16 +211,23 @@ public class MainFrame2 extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        documentSelectionPanel = new JPanel();
+        computingDocumentSelectionPanel = new ComputingDocumentTypePanel(this);
+        simpleDocumentSelectionPanel = new SimpleDocumentTypePanel(this);
+//        documentSelectionPanel.add(simpleDocumentSelectionPanel);
+        documentSelectionPanel.add(computingDocumentSelectionPanel);
+
         processDocumentButton = new javax.swing.JButton();
-        documentIncendiuRadio = new JRadioButton("Incendiu", false);
-        documentSecuritateRadio = new JRadioButton("Securitate", true);
+        computingDocumentRadio = new JRadioButton("Cu calcule", true);
+        simpleDocumentRadio = new JRadioButton("Simplu", false);
+
         documentTypeGroup = new ButtonGroup();
-        documentTypeGroup.add(documentIncendiuRadio);
-        documentTypeGroup.add(documentSecuritateRadio);
+        documentTypeGroup.add(computingDocumentRadio);
+        documentTypeGroup.add(simpleDocumentRadio);
 
         jLabel2 = new JLabel();
-        documentIncendiuRadio.addActionListener(e -> reloadDictionary());
-        documentSecuritateRadio.addActionListener(e -> reloadDictionary());
+        computingDocumentRadio.addActionListener(e -> switchDocumentTypePanel());
+        simpleDocumentRadio.addActionListener(e -> switchDocumentTypePanel());
 
         textPannel = new javax.swing.JPanel();
         dictionaryPannel = new javax.swing.JPanel();
@@ -287,17 +307,20 @@ public class MainFrame2 extends javax.swing.JFrame {
                         .addGroup(layout.createSequentialGroup()
                                 .addContainerGap()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(textPannel, javax.swing.GroupLayout.PREFERRED_SIZE, 860, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addGroup(layout.createSequentialGroup()
                                                 .addComponent(jLabel2)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(documentIncendiuRadio)
+                                                .addComponent(computingDocumentRadio)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(documentSecuritateRadio)
+                                                .addComponent(simpleDocumentRadio)
+                                        )
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addComponent(documentSelectionPanel)
                                         )
                                         .addGroup(layout.createSequentialGroup()
                                                 .addComponent(processDocumentButton)
                                         )
+                                        .addComponent(textPannel, javax.swing.GroupLayout.PREFERRED_SIZE, 860, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 )
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -322,19 +345,22 @@ public class MainFrame2 extends javax.swing.JFrame {
                                 .addContainerGap()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                         .addComponent(jLabel2)
-                                        .addComponent(documentSecuritateRadio)
-                                        .addComponent(documentIncendiuRadio)
+                                        .addComponent(simpleDocumentRadio)
+                                        .addComponent(computingDocumentRadio)
                                         .addComponent(addEntryButton)
                                         .addComponent(saveDictionaryButton)
                                         .addComponent(reloadDictionaryButton)
                                 )
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(processDocumentButton)
+                                        .addComponent(documentSelectionPanel)
                                         .addComponent(findLabel)
                                         .addComponent(findText)
                                 )
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(processDocumentButton)
+                                )
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addComponent(textPannel, javax.swing.GroupLayout.DEFAULT_SIZE, 757, Short.MAX_VALUE)
                                         .addComponent(dictionaryScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -343,6 +369,20 @@ public class MainFrame2 extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void switchDocumentTypePanel() {
+        documentSelectionPanel.removeAll();
+        if (computingDocumentRadio.isSelected()) {
+            documentSelectionPanel.add(computingDocumentSelectionPanel);
+        } else {
+            documentSelectionPanel.add(simpleDocumentSelectionPanel);
+        }
+
+        reloadDictionary();
+
+        this.pack();
+        this.repaint();
+    }
 
     private void findEntry(String text) {
         for (Component component : dictionaryPannel.getComponents()) {
@@ -383,10 +423,15 @@ public class MainFrame2 extends javax.swing.JFrame {
     private javax.swing.JPanel dictionaryPannel;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel textPannel;
+
+    private javax.swing.JPanel documentSelectionPanel;
+    private ComputingDocumentTypePanel computingDocumentSelectionPanel;
+    private SimpleDocumentTypePanel simpleDocumentSelectionPanel;
+
     private javax.swing.JButton processDocumentButton;
 
-    private javax.swing.JRadioButton documentIncendiuRadio;
-    private javax.swing.JRadioButton documentSecuritateRadio;
+    private javax.swing.JRadioButton computingDocumentRadio;
+    private javax.swing.JRadioButton simpleDocumentRadio;
     private javax.swing.ButtonGroup documentTypeGroup;
 
     private javax.swing.JButton addEntryButton;
@@ -395,6 +440,5 @@ public class MainFrame2 extends javax.swing.JFrame {
     private javax.swing.JLabel findLabel;
     private javax.swing.JTextField findText;
     // End of variables declaration//GEN-END:variables
-
 
 }
