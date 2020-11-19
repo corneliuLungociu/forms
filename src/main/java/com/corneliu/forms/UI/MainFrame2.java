@@ -36,7 +36,7 @@ public class MainFrame2 extends javax.swing.JFrame {
         initEditor1();
 //        initEditor2();
 
-        loadDictionary();
+        loadDictionary(getDocumentType());
     }
 
 //    private void initEditor2() {
@@ -76,8 +76,14 @@ public class MainFrame2 extends javax.swing.JFrame {
 
     private void processDocumentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_processSecuritateButtonActionPerformed
         try {
+            DocumentType documentType = getDocumentType();
+            if (documentType == null) {
+                throw new RuntimeException("Selectati tipul documentului.");
+            }
+
             Map<String, String> actualDictionary = computeActualDictionary();
-            String processedText = textProcessor.process(editor1.getDocumentText(), actualDictionary, getDocumentType());
+
+            String processedText = textProcessor.process(editor1.getDocumentText(), actualDictionary, documentType);
             editor1.setDocumentText(processedText);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
@@ -126,7 +132,12 @@ public class MainFrame2 extends javax.swing.JFrame {
     private void saveDictionaryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveDictionaryButtonActionPerformed
         Map<String, String> actualDictionary = computeActualDictionary();
         try {
-            textProcessor.saveDictionary(getDocumentType(), actualDictionary);
+            DocumentType documentType = getDocumentType();
+            if (documentType == null) {
+                throw new RuntimeException("Selectati tipul documentului.");
+            }
+
+            textProcessor.saveDictionary(documentType, actualDictionary);
             reloadDictionary();
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Nu a reusit salvarea dictionarului." + e.getMessage());
@@ -144,7 +155,10 @@ public class MainFrame2 extends javax.swing.JFrame {
             ((TitledBorder)dictionaryPannel.getBorder()).setTitleColor(Color.BLACK);
 
             clearDictionary();
-            loadDictionary();
+            DocumentType documentType = getDocumentType();
+            if (documentType != null) {
+                loadDictionary(documentType);
+            }
             this.pack();
             this.repaint();
         } catch (Exception e) {
@@ -178,9 +192,9 @@ public class MainFrame2 extends javax.swing.JFrame {
         }
     }
 
-    private void loadDictionary() throws FileNotFoundException {
+    private void loadDictionary(DocumentType documentType) throws FileNotFoundException {
         totalDictionaryEntries = 0;
-        for (Map.Entry<String, String> dictionaryEntry : textProcessor.getDictionary(getDocumentType()).entrySet()) {
+        for (Map.Entry<String, String> dictionaryEntry : textProcessor.getDictionary(documentType).entrySet()) {
             DictionaryEntryPanel2 panel = new DictionaryEntryPanel2(this, dictionaryEntry.getKey(), dictionaryEntry.getValue(), totalDictionaryEntries++);
             dictionaryPannel.add(panel);
 
@@ -200,7 +214,7 @@ public class MainFrame2 extends javax.swing.JFrame {
         } else {
             String selectedItem = (String) simpleDocumentSelectionPanel.getSimpleDocTypeCombo().getSelectedItem();
             if (selectedItem == null) {
-                throw new RuntimeException("Niciun Document Selectat.");
+                return null;
             }
             DocumentType.SIMPLE.setName(selectedItem.toUpperCase().replace(" ", "_"));
             return DocumentType.SIMPLE;

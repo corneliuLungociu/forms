@@ -1,6 +1,2 @@
-- ordine in dictionar - DONE
-- selectare dictionar   (pentru document incendiu vs petru document securitate) - DONE
-- cautare in dictionar                              - DONE
-- show asterisk when the dictionary is not saved    - DONE
-- if line is empyt, skip and continue               - DONE
-- Capacitate ups - to multiply by 10                - DONE
+- add as many doc types as needed
+- centrale.
